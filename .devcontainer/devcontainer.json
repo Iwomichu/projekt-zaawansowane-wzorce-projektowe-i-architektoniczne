@@ -1,0 +1,19 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "forwardPorts": [8000],
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": ["ms-python.python", "ms-python.vscode-pylance"]
+    }
+  },
+  "features": {
+		"ghcr.io/devcontainers-contrib/features/black:2": {},
+		"ghcr.io/devcontainers-contrib/features/poetry:2": {},
+    "docker-from-docker": {
+        "version": "latest",
+        "moby": true
+    }
+  }
+}
