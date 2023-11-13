@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from enum import Enum
-from typing import NewType
+from typing import NewType, Optional
 import bcrypt
 from sqlalchemy import Boolean, Integer, MetaData, String, LargeBinary, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session, sessionmaker
@@ -38,21 +39,31 @@ class User(Base):
     login_attempts_left: Mapped[int] = mapped_column(Integer)
 
 
-class UserAuthenticationResult(Base):
-    __tablename__ = "user_authentication_results"
+class UserAuthenticationLogRecord(Base):
+    __tablename__ = "user_authentication_log_records"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     login: Mapped[str] = mapped_column(String, index=True)
     authenticated: Mapped[bool] = mapped_column(Boolean)
 
 
-class UserAuthorizationResult:
-    __tablename__ = "user_authorization_results"
+class UserAuthorizationLogRecord:
+    __tablename__ = "user_authorization_log_records"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     login: Mapped[str] = mapped_column(String, index=True)
     authorized: Mapped[bool] = mapped_column(Boolean)
     section = mapped_column(AppSectionType)
+
+
+@dataclass
+class UserAuthenticationResult:
+    authenticated: bool
+
+
+@dataclass
+class UserAuthorizationResult:
+    authorized: bool
 
 
 class UserAlreadyExistsException(Exception):
@@ -72,7 +83,7 @@ class UserHasDifferentPassword(Exception):
 
 
 class UserHasNoLoginAttemptsLeft(Exception):
-    def __init__(self, user_login: str, authentication_result: UserAuthenticationResult) -> None:
+    def __init__(self, user_login: str, authentication_result: UserAuthenticationLogRecord) -> None:
         self.authentication_result = authentication_result
         super().__init__(f"User '{user_login=}' has no logging attempts left")
 
@@ -83,7 +94,7 @@ class CreateUserWorkflow:
 
     def create_user(self, login: str, plain_text_password: str) -> None:
         with self.session_maker() as session:
-            if self._user_already_exists(session, login=login):
+            if self._user_exists(session, login=login):
                 raise UserAlreadyExistsException(login)
             
             session.add(User(
@@ -93,7 +104,7 @@ class CreateUserWorkflow:
             ))
             session.commit()
             
-    def _user_already_exists(self, session: Session, login: str) -> bool:
+    def _user_exists(self, session: Session, login: str) -> bool:
         return session.scalars(select(User).filter_by(login=login)).first() is not None
     
     def _hash_password(self, plain_text_password: str) -> McfHash:
@@ -101,10 +112,45 @@ class CreateUserWorkflow:
 
 
 class AuthenticateUserWorkflow:
-    def authenticate_user(self, login: str, plain_text_password: str) -> UserAuthenticationResult:
-        pass
+    def __init__(self, session_maker: sessionmaker) -> None:
+        self.session_maker = session_maker
+
+    def authenticate_user(self, login: str, plain_text_password: str) -> UserAuthenticationLogRecord:
+        authenticated = False
+        try:
+            with self.session_maker() as session:
+                user = self._get_user(session, login=login)
+
+                if user is None:
+                    raise UserDoesNotExist(user_login=login)
+
+                if user.login_attempts_left < 1:
+                    raise UserHasNoLoginAttemptsLeft(user_login=user, authentication_result=UserAuthenticationResult(authenticated=False))
+                
+                if not self._passwords_match(plain_text_password=plain_text_password, hashed_password=user.password):
+                    user.login_attempts_left -= 1
+                    session.commit()
+                    raise UserHasDifferentPassword(user_login=user, authentication_result=UserAuthenticationResult(authenticated=False))
+                
+                user.login_attempts_left = LOGIN_ATTEMPTS
+                session.commit()
+
+                authenticated = True
+                return UserAuthenticationResult(authenticated=True)
+        finally:
+            # Extremaly risky, since finally will overwrite the exception if raises
+            with self.session_maker() as session:
+                session.add(UserAuthenticationLogRecord(login=login, authenticated=authenticated))
+                session.commit()
+
+
+    def _get_user(self, session: Session, login: str) -> Optional[User]:
+        return session.scalars(select(User).filter_by(login=login)).one_or_none()
+    
+    def _passwords_match(self, plain_text_password: str, hashed_password: McfHash) -> bool:
+        return bcrypt.checkpw(password=plain_text_password.encode("utf-8"), hashed_password=hashed_password)
 
 
 class AuthorizeUserWorkflow:
-    def authorize_user_to_access_section(self, login: str, section: AppSection) -> UserAuthorizationResult:
+    def authorize_user_to_access_section(self, login: str, section: AppSection) -> UserAuthorizationLogRecord:
         pass

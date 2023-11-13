@@ -73,7 +73,7 @@ class UserTestCase(TestCase):
         CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
         # when
-        result = AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password=user_password)
+        result = AuthenticateUserWorkflow(session_maker=self.session_maker).authenticate_user(login=user_login, plain_text_password=user_password)
 
         # then
         self.assertTrue(result.authenticated)
@@ -85,10 +85,12 @@ class UserTestCase(TestCase):
         CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
         # when
-        result = AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password=user_password)
+        AuthenticateUserWorkflow(session_maker=self.session_maker).authenticate_user(login=user_login, plain_text_password=user_password)
 
         # then
-        self.assertEqual(result.attempts_left, LOGIN_ATTEMPTS)
+        with self.session_maker() as session:
+            user = session.scalars(select(User).filter_by(login=user_login)).one()
+        self.assertEqual(user.login_attempts_left, LOGIN_ATTEMPTS)
 
     def test_unsuccesful_authentication_for_non_existant_user(self):
         # given
@@ -97,7 +99,7 @@ class UserTestCase(TestCase):
 
         # when / then
         with self.assertRaises(UserDoesNotExist):
-            AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password=user_password)
+            AuthenticateUserWorkflow(session_maker=self.session_maker).authenticate_user(login=user_login, plain_text_password=user_password)
         
 
     def test_unsuccesful_authentication_wrong_password(self):
@@ -108,7 +110,7 @@ class UserTestCase(TestCase):
 
         # when / then
         with self.assertRaises(UserHasDifferentPassword) as context:
-            AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password="otherpassword")
+            AuthenticateUserWorkflow(session_maker=self.session_maker).authenticate_user(login=user_login, plain_text_password="otherpassword")
 
         self.assertFalse(context.exception.authentication_result.authenticated)
 
@@ -120,7 +122,7 @@ class UserTestCase(TestCase):
 
         # when / then
         with self.assertRaises(UserHasDifferentPassword):
-            AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password="otherpassword")
+            AuthenticateUserWorkflow(session_maker=self.session_maker).authenticate_user(login=user_login, plain_text_password="otherpassword")
 
         with self.session_maker() as session:
             user = session.scalars(select(User).filter_by(login=user_login)).one()
@@ -137,7 +139,6 @@ class UserTestCase(TestCase):
             session.scalars(select(User).filter_by(login=user_login)).one().login_attempts_left = 0
             session.commit()
 
-
         # when / then
         with self.assertRaises(UserHasNoLoginAttemptsLeft):
-            AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password=user_password)
+            AuthenticateUserWorkflow(session_maker=self.session_maker).authenticate_user(login=user_login, plain_text_password=user_password)
