@@ -1,6 +1,6 @@
 from unittest import TestCase
 from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 from testcontainers.postgres import PostgresContainer
 
 from zwpa.user import LOGIN_ATTEMPTS, AuthenticateUserWorkflow, CreateUserWorkflow, User, UserAlreadyExistsException, UserDoesNotExist, UserHasDifferentPassword, UserHasNoLoginAttemptsLeft, metadata
@@ -12,6 +12,7 @@ class UserTestCase(TestCase):
         cls.postgres = PostgresContainer("postgres:11")
         cls.postgres.start()
         cls.engine = create_engine(cls.postgres.get_connection_url())
+        cls.session_maker = sessionmaker(cls.engine)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -31,13 +32,13 @@ class UserTestCase(TestCase):
         self.cleanup_database()
 
     def _add_user(self, user: User) -> None:
-        with Session(self.engine) as session:
+        with self.session_maker() as session:
             session.add(user)
             session.commit()
 
     def test_echo(self):
-        self._add_user(user=User(login="user", password=b"xxx"))
-        with Session(self.engine) as session:
+        self._add_user(user=User(login="user", password=b"xxx", login_attempts_left=LOGIN_ATTEMPTS))
+        with self.session_maker() as session:
             self.assertIsNotNone(session.scalars(select(User)).one_or_none())
 
     def test_create_user_happy_path(self):
@@ -46,10 +47,10 @@ class UserTestCase(TestCase):
         user_password = "password123"
         
         # when
-        CreateUserWorkflow().create_user(login=user_login, plain_text_password=user_password)
+        CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
         # then
-        with Session(self.engine) as session:
+        with self.session_maker() as session:
             user = session.scalars(select(User)).one_or_none()
         
         self.assertIsNotNone(user)
@@ -57,19 +58,19 @@ class UserTestCase(TestCase):
 
     def test_create_user_already_exists(self):
         # given
-        self._add_user(user=User(login="user", password=b"xxx"))
         user_login = "user"
         user_password = "password123"
+        CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
         
         # when / then
         with self.assertRaises(UserAlreadyExistsException):
-            CreateUserWorkflow().create_user(login=user_login, plain_text_password=user_password)
+            CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
     def test_user_can_authenticate(self):
         # given
         user_login = "user"
         user_password = "password123"
-        CreateUserWorkflow().create_user(login=user_login, plain_text_password=user_password)
+        CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
         # when
         result = AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password=user_password)
@@ -81,7 +82,7 @@ class UserTestCase(TestCase):
         # given
         user_login = "user"
         user_password = "password123"
-        CreateUserWorkflow().create_user(login=user_login, plain_text_password=user_password)
+        CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
         # when
         result = AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password=user_password)
@@ -103,7 +104,7 @@ class UserTestCase(TestCase):
         # given
         user_login = "user"
         user_password = "password123"
-        CreateUserWorkflow().create_user(login=user_login, plain_text_password=user_password)
+        CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
         # when / then
         with self.assertRaises(UserHasDifferentPassword) as context:
@@ -115,13 +116,13 @@ class UserTestCase(TestCase):
         # given
         user_login = "user"
         user_password = "password123"
-        CreateUserWorkflow().create_user(login=user_login, plain_text_password=user_password)
+        CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
         # when / then
         with self.assertRaises(UserHasDifferentPassword):
             AuthenticateUserWorkflow().authenticate_user(login=user_login, plain_text_password="otherpassword")
 
-        with Session(self.engine) as session:
+        with self.session_maker() as session:
             user = session.scalars(select(User).filter_by(login=user_login)).one()
 
         self.assertEqual(LOGIN_ATTEMPTS - 1, user.login_attempts_left)
@@ -130,9 +131,9 @@ class UserTestCase(TestCase):
         # given
         user_login = "user"
         user_password = "password123"
-        CreateUserWorkflow().create_user(login=user_login, plain_text_password=user_password)
+        CreateUserWorkflow(session_maker=self.session_maker).create_user(login=user_login, plain_text_password=user_password)
 
-        with Session(self.engine) as session:
+        with self.session_maker() as session:
             session.scalars(select(User).filter_by(login=user_login)).one().login_attempts_left = 0
             session.commit()
 
