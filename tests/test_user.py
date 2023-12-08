@@ -1,6 +1,6 @@
 from unittest import TestCase
 from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
 from zwpa.user import LOGIN_ATTEMPTS, AuthenticateUserWorkflow, CreateUserWorkflow, User, UserAlreadyExistsException, UserDoesNotExist, UserHasDifferentPassword, UserHasNoLoginAttemptsLeft, metadata

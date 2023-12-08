@@ -9,11 +9,12 @@
     }
   },
   "features": {
-		"ghcr.io/devcontainers-contrib/features/black:2": {},
 		"ghcr.io/devcontainers-contrib/features/poetry:2": {},
-    "docker-from-docker": {
-        "version": "latest",
-        "moby": true
+    "docker-in-docker": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v1"
     }
-  }
+  },
+  "postCreateCommand": ["poetry install", "poetry config virtualenvs.in-project true"]
 }

@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import NewType, Optional
+from typing import List, NewType, Optional
 import bcrypt
-from sqlalchemy import Boolean, Integer, MetaData, String, LargeBinary, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session, sessionmaker
+from sqlalchemy import Boolean, ForeignKey, Integer, MetaData, String, LargeBinary, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session, sessionmaker, relationship
 from sqlalchemy.dialects.postgresql import ENUM as pgEnum
 
 
@@ -20,6 +20,7 @@ class AppSection(str, Enum):
     PRODUCTION = "PRODUCTION"
     TRANSPORT = "TRANSPORT"
     BULK_SALE = "BULK_SALE"
+    USER_MANAGEMENT = "USER_MANAGEMENT"
 
 
 AppSectionType: pgEnum = pgEnum(
@@ -37,10 +38,20 @@ class User(Base):
     login: Mapped[str] = mapped_column(String, index=True)
     password: Mapped[McfHash] = mapped_column(LargeBinary)
     login_attempts_left: Mapped[int] = mapped_column(Integer)
+    permissions: Mapped[List["UserSectionPermissionRecord"]] = relationship(back_populates="user")
+
+
+class UserSectionPermissionRecord(Base):
+    __tablename__ = "user_section_permissions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped[User] = relationship(back_populates="permissions")
+    section = mapped_column(AppSectionType)
 
 
 class UserAuthenticationLogRecord(Base):
-    __tablename__ = "user_authentication_log_records"
+    __tablename__ = "user_authentication_log"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     login: Mapped[str] = mapped_column(String, index=True)
@@ -48,7 +59,7 @@ class UserAuthenticationLogRecord(Base):
 
 
 class UserAuthorizationLogRecord:
-    __tablename__ = "user_authorization_log_records"
+    __tablename__ = "user_authorization_log"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     login: Mapped[str] = mapped_column(String, index=True)
