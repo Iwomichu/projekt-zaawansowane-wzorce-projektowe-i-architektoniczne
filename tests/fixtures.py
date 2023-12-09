@@ -5,6 +5,7 @@ from zwpa.model import ClientRequest, Location, Product, TimeWindow, UserRole
 from zwpa.model import UserRoleAssignment
 
 from zwpa.model import User
+from zwpa.workflows.GetClientRequestsWorkflow import ClientRequestView
 
 
 class Fixtures:
@@ -115,3 +116,34 @@ class Fixtures:
         )
         session.add(client_request)
         return client_request
+
+    @classmethod
+    def new_client_request_view(
+        cls,
+        id: int,
+        client_id: int,
+        product_name: str = "BOXES",
+        product_unit: str = "ISO_CONTAINER",
+        destination_longitude: float = 12.33,
+        destination_latitude: float = 8.55,
+        supply_time_window_start: time = time(6, 0),
+        supply_time_window_end: time = time(15, 0),
+        price: Decimal = Decimal("0.99"),
+        unit_count: int = 1,
+        request_deadline: date = date(2020, 1, 1),
+        transport_deadline: date = date(2020, 2, 1),
+    ) -> ClientRequestView:
+        return ClientRequestView(
+            id=id,
+            client_id=client_id,
+            product_name=product_name,
+            product_unit=product_unit,
+            price=price,
+            unit_count=unit_count,
+            request_deadline=request_deadline,
+            transport_deadline=transport_deadline,
+            destination_longitude=destination_longitude,
+            destination_latitude=destination_latitude,
+            supply_time_window_start=supply_time_window_start,
+            supply_time_window_end=supply_time_window_end,
+        )

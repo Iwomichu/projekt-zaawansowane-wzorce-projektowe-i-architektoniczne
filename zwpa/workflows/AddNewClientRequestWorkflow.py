@@ -2,8 +2,7 @@ from abc import abstractmethod
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 from typing import Protocol
-from sqlalchemy import select
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
 from zwpa.model import ClientRequest, Location, Product, TimeWindow, User, UserRole
 

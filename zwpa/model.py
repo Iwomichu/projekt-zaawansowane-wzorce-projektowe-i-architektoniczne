@@ -105,6 +105,8 @@ class ClientRequest(Base):
     supply_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
     destination_id: Mapped[int] = mapped_column(ForeignKey("locations.id"), index=True)
 
+    product: Mapped["Product"] = relationship(foreign_keys=[product_id])
+    client: Mapped["User"] = relationship(foreign_keys=[client_id])
     destination: Mapped["Location"] = relationship(foreign_keys=[destination_id])
     supply_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[supply_time_window_id])
 

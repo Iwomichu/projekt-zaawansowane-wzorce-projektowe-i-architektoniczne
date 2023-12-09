@@ -1,5 +1,6 @@
 from datetime import datetime, time
 from decimal import Decimal
+from unittest import skip
 from sqlalchemy import select
 from tests.fixtures import Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
@@ -7,9 +8,13 @@ from zwpa.model import UserRole
 from zwpa.model import ClientRequest
 from zwpa.model import User
 from zwpa.workflows.AddNewClientRequestWorkflow import AddNewClientRequestWorkflow
+from zwpa.workflows.GetClientRequestsWorkflow import (
+    ClientRequestView,
+    GetClientRequestsWorkflow,
+)
 
 
-class UserTestCase(TestCaseWithDatabase):
+class ClientRequestTestCase(TestCaseWithDatabase):
     def _add_user(self, user: User) -> None:
         with self.session_maker() as session:
             session.add(user)
@@ -34,7 +39,9 @@ class UserTestCase(TestCaseWithDatabase):
             session.commit()
 
         # when
-        AddNewClientRequestWorkflow(self.session_maker, min_days_to_process=1).add_new_client_request(
+        AddNewClientRequestWorkflow(
+            self.session_maker, min_days_to_process=1
+        ).add_new_client_request(
             user_id=user.id,
             price=expected_client_request.price,
             unit_count=expected_client_request.unit_count,
@@ -70,23 +77,104 @@ class UserTestCase(TestCaseWithDatabase):
             self.assertEqual(expected_client_request.request_deadline, result_client_request.request_deadline)  # type: ignore
             self.assertEqual(expected_client_request.transport_deadline, result_client_request.transport_deadline)  # type: ignore
 
+    @skip(reason="nonprio")
     def test_client_can_modify_details_of_their_own_client_request(self):
         pass
 
+    @skip(reason="nonprio")
     def test_client_cannot_modify_details_of_not_their_own_client_request(self):
         pass
 
+    @skip(reason="nonprio")
     def test_client_cannot_modify_details_of_accepted_client_request(self):
         pass
 
     def test_client_can_browse_own_client_requests(self):
-        pass
+        # given
+        with self.session_maker(expire_on_commit=False) as session:
+            this_user = Fixtures.new_user(session)
+            other_user = Fixtures.new_user(session)
+            product = Fixtures.new_product(session)
+            Fixtures.new_role_assignment(
+                session, role=UserRole.CLIENT, user_id=this_user.id
+            )
+            expected_destination = Fixtures.new_location(session)
+            expected_supply_time_window = Fixtures.new_time_window(session)
+            session.commit()
+            this_client_request = Fixtures.new_client_request(
+                session=session,
+                product_id=product.id,
+                client_id=this_user.id,
+                destination_id=expected_destination.id,
+                supply_time_window_id=expected_supply_time_window.id,
+            )
+            Fixtures.new_client_request(
+                session=session,
+                product_id=product.id,
+                client_id=other_user.id,
+                destination_id=expected_destination.id,
+                supply_time_window_id=expected_supply_time_window.id,
+            )
+            session.commit()
+        expected_views = [
+            Fixtures.new_client_request_view(
+                id=this_client_request.id, client_id=this_user.id
+            )
+        ]
+
+        # when
+        result_views = GetClientRequestsWorkflow(
+            self.session_maker
+        ).get_my_client_requests_workflow(this_user.id)
+
+        # then
+        self.assertCountEqual(expected_views, result_views)
 
     def test_clerk_can_browse_all_client_requests(self):
-        pass
+        # given
+        with self.session_maker(expire_on_commit=False) as session:
+            clerk = Fixtures.new_user(session)
+            client_1 = Fixtures.new_user(session)
+            client_2 = Fixtures.new_user(session)
+            product = Fixtures.new_product(session)
+            Fixtures.new_role_assignment(session, role=UserRole.CLERK, user_id=clerk.id)
+            expected_destination = Fixtures.new_location(session)
+            expected_supply_time_window = Fixtures.new_time_window(session)
+            session.commit()
+            client_1_request = Fixtures.new_client_request(
+                session=session,
+                product_id=product.id,
+                client_id=client_1.id,
+                destination_id=expected_destination.id,
+                supply_time_window_id=expected_supply_time_window.id,
+            )
+            client_2_request = Fixtures.new_client_request(
+                session=session,
+                product_id=product.id,
+                client_id=client_2.id,
+                destination_id=expected_destination.id,
+                supply_time_window_id=expected_supply_time_window.id,
+            )
+            session.commit()
+        expected_views = [
+            Fixtures.new_client_request_view(
+                id=client_1_request.id, client_id=client_1.id
+            ),
+            Fixtures.new_client_request_view(
+                id=client_2_request.id, client_id=client_2.id
+            ),
+        ]
+
+        # when
+        result_views = GetClientRequestsWorkflow(
+            self.session_maker
+        ).get_all_client_requests_workflow(clerk.id)
+
+        # then
+        self.assertCountEqual(expected_views, result_views)
 
     def test_clerk_can_accept_a_client_request(self):
         pass
 
-    def test_client_request_acceptance_results_in_new_transport_request(self):
+    def test_accepting_client_request_creates_new_transport_request(self):
         pass
