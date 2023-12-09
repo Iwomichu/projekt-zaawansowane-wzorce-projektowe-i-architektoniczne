@@ -62,8 +62,10 @@ class AddNewClientRequestWorkflow:
         )
 
         with self.session_maker() as session:
-            time_window = TimeWindow(start=supply_time_window[0], end=supply_time_window[1])
-            location = Location(longitude = destination[0], latitude =destination[1])
+            time_window = TimeWindow(
+                start=supply_time_window[0], end=supply_time_window[1]
+            )
+            location = Location(longitude=destination[0], latitude=destination[1])
             session.add(time_window)
             session.add(location)
             session.commit()

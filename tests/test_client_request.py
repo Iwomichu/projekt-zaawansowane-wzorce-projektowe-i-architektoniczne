@@ -1,5 +1,3 @@
-from datetime import datetime, time
-from decimal import Decimal
 from unittest import skip
 from sqlalchemy import select
 from tests.fixtures import Fixtures
@@ -10,7 +8,6 @@ from zwpa.model import User
 from zwpa.workflows.AcceptClientRequestWorkflow import AcceptClientRequestWorkflow
 from zwpa.workflows.AddNewClientRequestWorkflow import AddNewClientRequestWorkflow
 from zwpa.workflows.GetClientRequestsWorkflow import (
-    ClientRequestView,
     GetClientRequestsWorkflow,
 )
 
@@ -234,9 +231,16 @@ class ClientRequestTestCase(TestCaseWithDatabase):
         with self.session_maker() as session:
             transport = session.execute(select(Transport)).scalar_one()
             transport_request = session.execute(select(TransportRequest)).scalar_one()
-            self.assertEqual(client_request.destination_id, transport.destination_location_id)
-            self.assertEqual(client_request.supply_time_window_id, transport.destination_time_window_id)
+            self.assertEqual(
+                client_request.destination_id, transport.destination_location_id
+            )
+            self.assertEqual(
+                client_request.supply_time_window_id,
+                transport.destination_time_window_id,
+            )
             self.assertEqual(load_time_window.id, transport.load_time_window_id)
             self.assertEqual(warehouse.location_id, transport.pickup_location_id)
             self.assertEqual(client_request.unit_count, transport.unit_count)
-            self.assertEqual(client_request.request_deadline, transport_request.request_deadline)
+            self.assertEqual(
+                client_request.request_deadline, transport_request.request_deadline
+            )

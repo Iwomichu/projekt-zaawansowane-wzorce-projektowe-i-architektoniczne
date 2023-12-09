@@ -3,7 +3,6 @@ from sqlalchemy.orm import sessionmaker, Session
 
 from zwpa.model import (
     ClientRequest,
-    TimeWindow,
     Transport,
     TransportRequest,
     User,

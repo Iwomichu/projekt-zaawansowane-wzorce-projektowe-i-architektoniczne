@@ -33,7 +33,7 @@ LOGIN_ATTEMPTS = 3
 
 class Location(Base):
     __tablename__ = "locations"
-    
+
     id: Mapped[int] = mapped_column(primary_key=True)
     label: Mapped[str] = mapped_column(String, nullable=True)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
@@ -109,7 +109,9 @@ class ClientRequest(Base):
     product: Mapped["Product"] = relationship(foreign_keys=[product_id])
     client: Mapped["User"] = relationship(foreign_keys=[client_id])
     destination: Mapped["Location"] = relationship(foreign_keys=[destination_id])
-    supply_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[supply_time_window_id])
+    supply_time_window: Mapped["TimeWindow"] = relationship(
+        foreign_keys=[supply_time_window_id]
+    )
 
 
 class Product(Base):
@@ -180,12 +182,22 @@ class Transport(Base):
     pickup_location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
     destination_location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
     load_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
-    destination_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
+    destination_time_window_id: Mapped[int] = mapped_column(
+        ForeignKey("time_windows.id")
+    )
 
-    pickup_location: Mapped["Location"] = relationship(foreign_keys=[pickup_location_id])
-    destination_location: Mapped["Location"] = relationship(foreign_keys=[destination_location_id])
-    load_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[load_time_window_id])
-    destination_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[destination_time_window_id])
+    pickup_location: Mapped["Location"] = relationship(
+        foreign_keys=[pickup_location_id]
+    )
+    destination_location: Mapped["Location"] = relationship(
+        foreign_keys=[destination_location_id]
+    )
+    load_time_window: Mapped["TimeWindow"] = relationship(
+        foreign_keys=[load_time_window_id]
+    )
+    destination_time_window: Mapped["TimeWindow"] = relationship(
+        foreign_keys=[destination_time_window_id]
+    )
 
 
 class TransportRequest(Base):

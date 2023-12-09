@@ -187,10 +187,13 @@ class Fixtures:
         )
         session.add(warehouse)
         return warehouse
-    
+
     @classmethod
-    def new_today_provider(cls, today: datetime = datetime(2020, 1, 1)) -> TodayProvider:
+    def new_today_provider(
+        cls, today: datetime = datetime(2020, 1, 1)
+    ) -> TodayProvider:
         class FakeTodayProvider:
             def today(self) -> datetime:
                 return today
+
         return FakeTodayProvider()
