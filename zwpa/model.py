@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 import decimal
 from enum import Enum
 import re
@@ -7,11 +7,13 @@ from sqlalchemy import (
     Boolean,
     Date,
     Dialect,
+    Float,
     ForeignKey,
     Integer,
     LargeBinary,
     MetaData,
     String,
+    Time,
     TypeDecorator,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -27,6 +29,23 @@ class Base(DeclarativeBase):
 
 
 LOGIN_ATTEMPTS = 3
+
+
+class Location(Base):
+    __tablename__ = "locations"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str] = mapped_column(String, nullable=True)
+    longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    latitude: Mapped[float] = mapped_column(Float, nullable=False)
+
+
+class TimeWindow(Base):
+    __tablename__ = "time_windows"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    start: Mapped[time] = mapped_column(Time)
+    end: Mapped[time] = mapped_column(Time)
 
 
 class User(Base):
@@ -76,10 +95,18 @@ class ClientRequest(Base):
     __tablename__ = "client_requests"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    price: Mapped[decimal.Decimal] = mapped_column(NumericMoney)
+    unit_count: Mapped[int] = mapped_column(Integer)
+    request_deadline: Mapped[date] = mapped_column(Date)
+    transport_deadline: Mapped[date] = mapped_column(Date)
+
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
     client_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-    deadline: Mapped[date] = mapped_column(Date)
-    price: Mapped[NumericMoney] = mapped_column(NumericMoney)
+    supply_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
+    destination_id: Mapped[int] = mapped_column(ForeignKey("locations.id"), index=True)
+
+    destination: Mapped["Location"] = relationship(foreign_keys=[destination_id])
+    supply_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[supply_time_window_id])
 
 
 class Product(Base):
@@ -139,3 +166,39 @@ class UserSectionPermissionRecord(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship(back_populates="permissions")
     section = mapped_column(AppSectionType)
+
+
+class Transport(Base):
+    __tablename__ = "transports"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    unit_count: Mapped[int] = mapped_column(Integer)
+
+    pickup_location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
+    destination_location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
+    load_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
+    destination_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
+
+    pickup_location: Mapped["Location"] = relationship(foreign_keys=[pickup_location_id])
+    destination_location: Mapped["Location"] = relationship(foreign_keys=[destination_location_id])
+    load_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[load_time_window_id])
+    destination_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[destination_time_window_id])
+
+
+class TransportRequest(Base):
+    __tablename__ = "transport_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    request_deadline: Mapped[date] = mapped_column(Date)
+    transport_id: Mapped[int] = mapped_column(ForeignKey("transports.id"))
+    transport: Mapped["Transport"] = relationship()
+
+
+class Warehouse(Base):
+    __tablename__ = "warehouses"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str] = mapped_column(String, nullable=False)
+
+    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
+    location: Mapped["Location"] = relationship()
