@@ -1,46 +1,17 @@
-from unittest import TestCase
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
-from testcontainers.postgres import PostgresContainer
+from sqlalchemy import select
+from tests.test_case_with_database import TestCaseWithDatabase
+from zwpa.model import User
+from zwpa.workflows.AuthenticateUserWorkflow import AuthenticateUserWorkflow
+from zwpa.workflows.CreateUserWorkflow import CreateUserWorkflow
+from zwpa.exceptions.UserAlreadyExistsException import UserAlreadyExistsException
+from zwpa.exceptions.UserDoesNotExist import UserDoesNotExist
+from zwpa.exceptions.UserHasDifferentPassword import UserHasDifferentPassword
+from zwpa.exceptions.UserHasNoLoginAttemptsLeft import UserHasNoLoginAttemptsLeft
 
-from zwpa.user import LOGIN_ATTEMPTS, AuthenticateUserWorkflow, CreateUserWorkflow, User, UserAlreadyExistsException, UserDoesNotExist, UserHasDifferentPassword, UserHasNoLoginAttemptsLeft, metadata
+from zwpa.model import LOGIN_ATTEMPTS
 
 
-class UserTestCase(TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.postgres = PostgresContainer("postgres:11")
-        cls.postgres.start()
-        cls.engine = create_engine(cls.postgres.get_connection_url())
-        cls.session_maker = sessionmaker(cls.engine)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls.postgres.stop()
-
-    def setUp(self) -> None:
-        with self.engine.begin() as connection:
-            metadata.create_all(connection)
-
-    @classmethod
-    def cleanup_database(cls) -> None:
-        with cls.engine.begin() as connection:
-            for table in reversed(metadata.sorted_tables):
-                connection.execute(table.delete())
-
-    def tearDown(self) -> None:
-        self.cleanup_database()
-
-    def _add_user(self, user: User) -> None:
-        with self.session_maker() as session:
-            session.add(user)
-            session.commit()
-
-    def test_echo(self):
-        self._add_user(user=User(login="user", password=b"xxx", login_attempts_left=LOGIN_ATTEMPTS))
-        with self.session_maker() as session:
-            self.assertIsNotNone(session.scalars(select(User)).one_or_none())
-
+class UserTestCase(TestCaseWithDatabase):
     def test_create_user_happy_path(self):
         # given
         user_login = "user"
@@ -54,7 +25,7 @@ class UserTestCase(TestCase):
             user = session.scalars(select(User)).one_or_none()
         
         self.assertIsNotNone(user)
-        self.assertEqual(user_login, user.login)
+        self.assertEqual(user_login, user.login)  # type: ignore // typecheck cannot understand above assertion
 
     def test_create_user_already_exists(self):
         # given
