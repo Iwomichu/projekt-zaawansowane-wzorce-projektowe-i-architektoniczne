@@ -77,6 +77,7 @@ class AddNewClientRequestWorkflow:
                 product_id=product_id,
                 supply_time_window_id=time_window.id,
                 destination_id=location.id,
+                accepted=False,
             )
             session.add(client_request)
             session.commit()

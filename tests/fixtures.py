@@ -1,10 +1,11 @@
-from datetime import date, time
+from datetime import date, datetime, time
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from zwpa.model import ClientRequest, Location, Product, TimeWindow, UserRole
+from zwpa.model import ClientRequest, Location, Product, TimeWindow, UserRole, Warehouse
 from zwpa.model import UserRoleAssignment
 
 from zwpa.model import User
+from zwpa.workflows.AddNewClientRequestWorkflow import TodayProvider
 from zwpa.workflows.GetClientRequestsWorkflow import ClientRequestView
 
 
@@ -52,10 +53,13 @@ class Fixtures:
     def new_product(
         cls,
         session: Session,
+        id: int | None = None,
         label: str = "BOXES",
         unit: str = "ISO_CONTAINER",
     ) -> Product:
-        product = Product(label=label, unit=unit)
+        product = Product(
+            id=id if id is not None else cls.next_id(), label=label, unit=unit
+        )
         session.add(product)
         return product
 
@@ -93,16 +97,29 @@ class Fixtures:
     def new_client_request(
         cls,
         session: Session,
-        product_id: int,
-        client_id: int,
-        supply_time_window_id: int,
-        destination_id: int,
+        product_id: int | None = None,
+        client_id: int | None = None,
+        supply_time_window_id: int | None = None,
+        destination_id: int | None = None,
         price: Decimal = Decimal("0.99"),
         unit_count: int = 1,
         request_deadline: date = date(2020, 1, 1),
         transport_deadline: date = date(2020, 2, 1),
+        accepted: bool = False,
         id: int | None = None,
     ) -> ClientRequest:
+        if product_id is None:
+            product_id = cls.next_id()
+            cls.new_product(session, id=product_id)
+        if client_id is None:
+            client_id = cls.next_id()
+            cls.new_user(session, id=client_id)
+        if supply_time_window_id is None:
+            supply_time_window_id = cls.next_id()
+            cls.new_time_window(session, id=supply_time_window_id)
+        if destination_id is None:
+            destination_id = cls.next_id()
+            cls.new_location(session, id=destination_id)
         client_request = ClientRequest(
             product_id=product_id,
             client_id=client_id,
@@ -113,6 +130,7 @@ class Fixtures:
             unit_count=unit_count,
             request_deadline=request_deadline,
             transport_deadline=transport_deadline,
+            accepted=accepted,
         )
         session.add(client_request)
         return client_request
@@ -120,8 +138,8 @@ class Fixtures:
     @classmethod
     def new_client_request_view(
         cls,
-        id: int,
         client_id: int,
+        id: int | None = None,
         product_name: str = "BOXES",
         product_unit: str = "ISO_CONTAINER",
         destination_longitude: float = 12.33,
@@ -132,9 +150,10 @@ class Fixtures:
         unit_count: int = 1,
         request_deadline: date = date(2020, 1, 1),
         transport_deadline: date = date(2020, 2, 1),
+        accepted: bool = False,
     ) -> ClientRequestView:
         return ClientRequestView(
-            id=id,
+            id=id if id is not None else cls.next_id(),
             client_id=client_id,
             product_name=product_name,
             product_unit=product_unit,
@@ -146,4 +165,32 @@ class Fixtures:
             destination_latitude=destination_latitude,
             supply_time_window_start=supply_time_window_start,
             supply_time_window_end=supply_time_window_end,
+            accepted=accepted,
         )
+
+    @classmethod
+    def new_warehouse(
+        cls,
+        session: Session,
+        location_id: int | None = None,
+        label: str = "Test Warehouse",
+        id: int | None = None,
+    ) -> Warehouse:
+        if location_id is None:
+            location_id = cls.next_id()
+            cls.new_location(session, id=location_id)
+
+        warehouse = Warehouse(
+            id=id if id is not None else cls.next_id(),
+            location_id=location_id,
+            label=label,
+        )
+        session.add(warehouse)
+        return warehouse
+    
+    @classmethod
+    def new_today_provider(cls, today: datetime = datetime(2020, 1, 1)) -> TodayProvider:
+        class FakeTodayProvider:
+            def today(self) -> datetime:
+                return today
+        return FakeTodayProvider()

@@ -99,6 +99,7 @@ class ClientRequest(Base):
     unit_count: Mapped[int] = mapped_column(Integer)
     request_deadline: Mapped[date] = mapped_column(Date)
     transport_deadline: Mapped[date] = mapped_column(Date)
+    accepted: Mapped[bool] = mapped_column(Boolean)
 
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
     client_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)

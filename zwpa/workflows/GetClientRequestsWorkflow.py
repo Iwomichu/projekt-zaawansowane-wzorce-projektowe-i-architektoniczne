@@ -21,6 +21,7 @@ class ClientRequestView:
     supply_time_window_end: time
     product_name: str
     product_unit: str
+    accepted: bool
 
     @staticmethod
     def from_client_request(client_request: ClientRequest):
@@ -37,6 +38,7 @@ class ClientRequestView:
             product_unit=client_request.product.unit,
             supply_time_window_start=client_request.supply_time_window.start,
             supply_time_window_end=client_request.supply_time_window.end,
+            accepted=client_request.accepted,
         )
 
 
