@@ -7,6 +7,7 @@ from zwpa.model import UserRoleAssignment
 from zwpa.model import User
 from zwpa.workflows.AddNewClientRequestWorkflow import TodayProvider
 from zwpa.workflows.GetClientRequestsWorkflow import ClientRequestView
+from zwpa.workflows.ListUserRolesWorkflow import UserRolesView
 
 
 class Fixtures:
@@ -197,3 +198,24 @@ class Fixtures:
                 return today
 
         return FakeTodayProvider()
+
+    @classmethod
+    def new_user_roles_view(
+        cls,
+        user_id: int,
+        user_login: str = "user",
+        is_admin: bool = False,
+        is_clerk: bool = False,
+        is_client: bool = False,
+        is_supplier: bool = False,
+        is_transport: bool = False,
+    ) -> UserRolesView:
+        return UserRolesView(
+            id=user_id,
+            login=user_login,
+            is_admin=is_admin,
+            is_clerk=is_clerk,
+            is_client=is_client,
+            is_supplier=is_supplier,
+            is_transport=is_transport,
+        )

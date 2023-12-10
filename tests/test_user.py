@@ -11,6 +11,7 @@ from zwpa.exceptions.UserHasDifferentPassword import UserHasDifferentPassword
 from zwpa.exceptions.UserHasNoLoginAttemptsLeft import UserHasNoLoginAttemptsLeft
 
 from zwpa.model import LOGIN_ATTEMPTS
+from zwpa.workflows.ListUserRolesWorkflow import ListUserRolesWorkflow, UserRolesView
 from zwpa.workflows.ModifyUserRolesWorkflow import ModifyUserRolesWorkflow
 
 
@@ -185,3 +186,29 @@ class UserTestCase(TestCaseWithDatabase):
             user.id,
             roles=[UserRole.CLIENT],
         )
+
+    def test_admin_can_list_user_roles(self):
+        # given
+        with self.session_maker(expire_on_commit=False) as session:
+            caller = Fixtures.new_user(session, id=1, login="admin")
+            user_1 = Fixtures.new_user(session, id=2, login="client_1")
+            user_2 = Fixtures.new_user(session, id=3, login="client_2")
+            session.commit()
+            Fixtures.new_role_assignment(
+                session, role=UserRole.ADMIN, user_id=caller.id
+            )
+            Fixtures.new_role_assignment(
+                session, role=UserRole.CLERK, user_id=user_1.id
+            )
+            session.commit()
+        
+        # when
+        expected = [
+            UserRolesView(id=1, is_admin=True, login="admin"),
+            UserRolesView(id=2, is_clerk=True, login="client_1"),
+            UserRolesView(id=3, login="client_2"),
+        ]
+        result = ListUserRolesWorkflow(self.session_maker).list_user_roles_workflow(caller.id)
+
+        # then
+        self.assertCountEqual(expected, result)

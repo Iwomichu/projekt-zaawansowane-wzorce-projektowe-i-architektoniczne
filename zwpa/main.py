@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 from datetime import datetime, timezone
 from typing_extensions import Annotated
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, status
@@ -11,6 +12,7 @@ from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
 
 from zwpa.workflows.AuthenticateUserWorkflow import AuthenticateUserWorkflow
 from zwpa.workflows.GetClientRequestsWorkflow import GetClientRequestsWorkflow
+from zwpa.workflows.ListUserRolesWorkflow import ListUserRolesWorkflow
 from .config import Config
 from .model import Base, UserRole
 
@@ -34,6 +36,7 @@ create_user_workflow = CreateUserWorkflow(session_maker)
 modify_user_roles_workflow = ModifyUserRolesWorkflow(session_maker)
 authenticate_user_workflow = AuthenticateUserWorkflow(session_maker)
 get_client_requests_workflow = GetClientRequestsWorkflow(session_maker)
+list_user_roles_workflow = ListUserRolesWorkflow(session_maker)
 
 
 @asynccontextmanager
@@ -89,11 +92,26 @@ def post_create_user(
     )
 
 
+@app.get("/user/roles")
+def get_user_roles(
+    request: Request, user_id: Annotated[int, Depends(get_current_user_id)]
+):
+    user_roles_views = list_user_roles_workflow.list_user_roles_workflow(user_id)
+    return templates.TemplateResponse(
+        "userRolesPage.html",
+        {"request": request, "users": [asdict(view) for view in user_roles_views]},
+    )
+
+
 @app.get("/login")
 def get_login(request: Request, user_id: Annotated[int, Depends(get_current_user_id)]):
     return templates.TemplateResponse(
         "personalizedLandingPage.html",
-        {"request": request, "id": user_id, "timestamp": datetime.now(tz=timezone.utc).isoformat()},
+        {
+            "request": request,
+            "id": user_id,
+            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        },
     )
 
 
