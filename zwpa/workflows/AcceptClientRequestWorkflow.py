@@ -13,10 +13,7 @@ from zwpa.workflows.AddNewClientRequestWorkflow import (
     DefaultTodayProvider,
     TodayProvider,
 )
-
-
-class UserLacksRoleException(Exception):
-    pass
+from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
 
 
 class RequestAlreadyAccepted(Exception):

@@ -1,6 +1,8 @@
 from sqlalchemy import select
+from tests.fixtures import Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
-from zwpa.model import User
+from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
+from zwpa.model import User, UserRole, UserRoleAssignment
 from zwpa.workflows.AuthenticateUserWorkflow import AuthenticateUserWorkflow
 from zwpa.workflows.CreateUserWorkflow import CreateUserWorkflow
 from zwpa.exceptions.UserAlreadyExistsException import UserAlreadyExistsException
@@ -9,6 +11,7 @@ from zwpa.exceptions.UserHasDifferentPassword import UserHasDifferentPassword
 from zwpa.exceptions.UserHasNoLoginAttemptsLeft import UserHasNoLoginAttemptsLeft
 
 from zwpa.model import LOGIN_ATTEMPTS
+from zwpa.workflows.ModifyUserRolesWorkflow import ModifyUserRolesWorkflow
 
 
 class UserTestCase(TestCaseWithDatabase):
@@ -142,3 +145,43 @@ class UserTestCase(TestCaseWithDatabase):
             AuthenticateUserWorkflow(
                 session_maker=self.session_maker
             ).authenticate_user(login=user_login, plain_text_password=user_password)
+
+    def test_admin_can_modify_user_roles(self):
+        # given
+        with self.session_maker(expire_on_commit=False) as session:
+            caller = Fixtures.new_user(session)
+            user = Fixtures.new_user(session)
+            session.commit()
+            Fixtures.new_role_assignment(
+                session, role=UserRole.ADMIN, user_id=caller.id
+            )
+            session.commit()
+
+        # when
+        ModifyUserRolesWorkflow(self.session_maker).modify_user_roles_as_admin(
+            caller.id, user.id, roles=[UserRole.CLIENT]
+        )
+
+        # then
+        with self.session_maker(expire_on_commit=False) as session:
+            role_assignment = session.execute(
+                select(UserRoleAssignment).where(UserRoleAssignment.user_id == user.id)
+            ).scalar_one()
+
+        self.assertEqual(UserRole.CLIENT, role_assignment.role)
+
+    def test_non_admin_cannot_modify_user_roles(self):
+        # given
+        with self.session_maker(expire_on_commit=False) as session:
+            caller = Fixtures.new_user(session)
+            user = Fixtures.new_user(session)
+            session.commit()
+
+        # when / then
+        self.assertRaises(
+            UserLacksRoleException,
+            ModifyUserRolesWorkflow(self.session_maker).modify_user_roles_as_admin,
+            caller.id,
+            user.id,
+            roles=[UserRole.CLIENT],
+        )

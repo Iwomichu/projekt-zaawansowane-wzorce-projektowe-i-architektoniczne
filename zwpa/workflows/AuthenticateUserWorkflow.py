@@ -41,7 +41,7 @@ class AuthenticateUserWorkflow:
                 session.commit()
 
                 authenticated = True
-                return UserAuthenticationResult(authenticated=True)
+                return UserAuthenticationResult(authenticated=True, user_id=user.id)
         finally:
             # Extremaly risky, since finally will overwrite the exception if raises
             with self.session_maker() as session:

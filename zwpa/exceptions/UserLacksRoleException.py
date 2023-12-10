@@ -1,0 +1,2 @@
+class UserLacksRoleException(Exception):
+    pass

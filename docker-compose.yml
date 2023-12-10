@@ -1,0 +1,23 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ZWPA_DATABASE_HOST: "postgres"
+      ZWPA_DATABASE_PORT: "5432"
+      ZWPA_DATABASE_DATABASE: "postgres"
+      ZWPA_DATABASE_LOGIN: "postgres"
+      ZWPA_DATABASE_PASSWORD: "q1!w2@e3#"
+      ZWPA_ADMIN_LOGIN: "admin"
+      ZWPA_ADMIN_PASSWORD: "admin"
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgres
+  postgres:
+    image: "postgres:11"
+    environment:
+      POSTGRES_PASSWORD: "q1!w2@e3#"
+    ports:
+      - 5432
