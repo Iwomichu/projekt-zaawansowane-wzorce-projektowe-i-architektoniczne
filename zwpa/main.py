@@ -73,6 +73,14 @@ def index(request: Request):
     )
 
 
+@app.get("/login", response_class=HTMLResponse)
+def login(request: Request, _: Annotated[int, Depends(get_current_user_id)]):
+    return templates.TemplateResponse(
+        "landingPage.html",
+        {"request": request, "timestamp": datetime.now(tz=timezone.utc).isoformat()},
+    )
+
+
 @app.get("/user/create")
 def get_create_user(request: Request):
     return templates.TemplateResponse(
@@ -147,18 +155,6 @@ def post_user_roles_update_form(
     return templates.TemplateResponse(
         "userRolesPage.html",
         {"request": request, "users": [asdict(view) for view in user_roles_views]},
-    )
-
-
-@app.get("/login")
-def get_login(request: Request, user_id: Annotated[int, Depends(get_current_user_id)]):
-    return templates.TemplateResponse(
-        "personalizedLandingPage.html",
-        {
-            "request": request,
-            "id": user_id,
-            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-        },
     )
 
 

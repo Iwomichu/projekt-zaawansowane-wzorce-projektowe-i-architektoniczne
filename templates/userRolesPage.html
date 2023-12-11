@@ -1,35 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Role Management</title>
-</head>
-<body>
-    <h1>List of user roles</h1>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Login</th>
-            <th>Admin</th>
-            <th>Client</th>
-            <th>Clerk</th>
-            <th>Supplier</th>
-            <th>Transporter</th>
-            <th></th>
-        </tr>
-        {% for user in users %}
-        <tr>
-            <td>{{user.id}}</td>
-            <td>{{user.login}}</td>
-            <td>{{user.is_admin}}</td>
-            <td>{{user.is_client}}</td>
-            <td>{{user.is_clerk}}</td>
-            <td>{{user.is_supplier}}</td>
-            <td>{{user.is_transport}}</td>
-            <td><a href="/user/roles/edit?target_id={{user.id}}">Edit</a></td>
-        </tr>
-        {% endfor %}
-    </table>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}User Role Management{% endblock %}
+{% block head %}
+{% endblock %}
+{% block content %}
+
+<h1>List of user roles</h1>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Login</th>
+        <th>Admin</th>
+        <th>Client</th>
+        <th>Clerk</th>
+        <th>Supplier</th>
+        <th>Transporter</th>
+        <th></th>
+    </tr>
+    {% for user in users %}
+    <tr>
+        <td>{{user.id}}</td>
+        <td>{{user.login}}</td>
+        <td>{{user.is_admin}}</td>
+        <td>{{user.is_client}}</td>
+        <td>{{user.is_clerk}}</td>
+        <td>{{user.is_supplier}}</td>
+        <td>{{user.is_transport}}</td>
+        <td><a href="/user/roles/edit?target_id={{user.id}}">Edit</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

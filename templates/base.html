@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css" />
+    <title>{% block title %}{% endblock %} - My Webpage</title>
+    {% endblock %}
+</head>
+<body>
+    <div id="menu">
+        <a href="/user/create">Sign up</a>
+        <a href="/login">Sign in</a>
+        <a href="/user/roles">User roles</a>
+        <a href="/client_requests/all">All client requests</a>
+        <a href="/client_requests/my">My client requests</a>
+    </div>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+        {% block footer %}
+        &copy; Copyright 2023 by Iwomichu</a>.
+        {% endblock %}
+    </div>
+</body>
+</html>
