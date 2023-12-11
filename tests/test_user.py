@@ -212,3 +212,25 @@ class UserTestCase(TestCaseWithDatabase):
 
         # then
         self.assertCountEqual(expected, result)
+
+    def test_admin_can_list_single_user_roles(self):
+        # given
+        with self.session_maker(expire_on_commit=False) as session:
+            caller = Fixtures.new_user(session, id=1, login="admin")
+            user_1 = Fixtures.new_user(session, id=2, login="client_1")
+            user_2 = Fixtures.new_user(session, id=3, login="client_2")
+            session.commit()
+            Fixtures.new_role_assignment(
+                session, role=UserRole.ADMIN, user_id=caller.id
+            )
+            Fixtures.new_role_assignment(
+                session, role=UserRole.CLERK, user_id=user_1.id
+            )
+            session.commit()
+        
+        # when
+        expected = UserRolesView(id=2, is_clerk=True, login="client_1")
+        result = ListUserRolesWorkflow(self.session_maker).get_single_user_role_view_workflow(caller.id, user_1.id)
+
+        # then
+        self.assertEqual(expected, result)

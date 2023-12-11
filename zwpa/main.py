@@ -73,7 +73,7 @@ def index(request: Request):
     )
 
 
-@app.get("/create_user")
+@app.get("/user/create")
 def get_create_user(request: Request):
     return templates.TemplateResponse(
         "createAccountPage.html",
@@ -81,7 +81,7 @@ def get_create_user(request: Request):
     )
 
 
-@app.post("/create_user")
+@app.post("/user/create")
 def post_create_user(
     request: Request, login: Annotated[str, Form()], password: Annotated[str, Form()]
 ):
@@ -96,6 +96,53 @@ def post_create_user(
 def get_user_roles(
     request: Request, user_id: Annotated[int, Depends(get_current_user_id)]
 ):
+    user_roles_views = list_user_roles_workflow.list_user_roles_workflow(user_id)
+    return templates.TemplateResponse(
+        "userRolesPage.html",
+        {"request": request, "users": [asdict(view) for view in user_roles_views]},
+    )
+
+
+@app.get("/user/roles/edit")
+def get_user_roles_update_form(
+    target_id: int,
+    request: Request,
+    user_id: Annotated[int, Depends(get_current_user_id)],
+):
+    user_roles_view = list_user_roles_workflow.get_single_user_role_view_workflow(
+        admin_id=user_id, user_id=target_id
+    )
+    return templates.TemplateResponse(
+        "editUserRolesPage.html",
+        {"request": request, "user": user_roles_view},
+    )
+
+
+@app.post("/user/roles/edit")
+def post_user_roles_update_form(
+    target_id: int,
+    request: Request,
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    is_admin: Annotated[bool, Form()] = False,
+    is_client: Annotated[bool, Form()] = False,
+    is_clerk: Annotated[bool, Form()] = False,
+    is_supplier: Annotated[bool, Form()] = False,
+    is_transport: Annotated[bool, Form()] = False,
+):
+    user_roles = []
+
+    if is_admin:
+        user_roles.append(UserRole.ADMIN)
+    if is_clerk:
+        user_roles.append(UserRole.CLERK)
+    if is_client:
+        user_roles.append(UserRole.CLIENT)
+    if is_supplier:
+        user_roles.append(UserRole.SUPPLIER)
+    if is_transport:
+        user_roles.append(UserRole.TRANSPORT)
+    modify_user_roles_workflow.modify_user_roles_as_admin(admin_id=user_id, user_id=target_id, roles=user_roles)
+    
     user_roles_views = list_user_roles_workflow.list_user_roles_workflow(user_id)
     return templates.TemplateResponse(
         "userRolesPage.html",

@@ -21,6 +21,15 @@ class ListUserRolesWorkflow:
     def __init__(self, session_maker: sessionmaker) -> None:
         self.session_maker = session_maker
 
+    def get_single_user_role_view_workflow(self, admin_id: int, user_id: int) -> UserRolesView:
+        with self.session_maker() as session:
+            if not self.__is_user_of_role(
+                session, user_id=admin_id, role=UserRole.ADMIN
+            ):
+                raise UserLacksRoleException()
+            user = session.get_one(User, user_id)
+            return self.__map_user_to_user_roles_view(user)
+        
     def list_user_roles_workflow(self, admin_id: int) -> list[UserRolesView]:
         with self.session_maker() as session:
             if not self.__is_user_of_role(
