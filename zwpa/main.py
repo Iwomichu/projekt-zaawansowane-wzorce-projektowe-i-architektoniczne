@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 
 from zwpa.workflows.user.CreateRootWorkflow import CreateRootWorkflow
+from zwpa.workflows.utils.SeedSystemWithData import SeedSystemWithDataWorkflow
 from .model import Base
 from .routers.shared import (
     session_maker,
@@ -27,12 +28,14 @@ create_root_workflow = CreateRootWorkflow(
     create_user_workflow=create_user_workflow,
     modify_user_roles_workflow=modify_user_roles_workflow,
 )
+seed_system_with_data_workflow = SeedSystemWithDataWorkflow(session_maker)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
     create_root_workflow.create_root_user()
+    seed_system_with_data_workflow.seed()
     yield
 
 

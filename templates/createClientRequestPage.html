@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block head %}
+{% endblock %}
+{% block content %}
+<h1>Create client request</h1>
+<form action="/client_requests/create" method="post">
+    <div>
+        <label for="price">Price</label>
+        <input type="number" name="price" id="price">
+    </div>
+
+    <div>
+        <label for="unit_count">Unit count</label>
+        <input type="number" name="unit_count" id="unit_count">
+    </div>
+
+    <div>
+        <label for="request_deadline">Request acceptance deadline</label>
+        <input type="date" name="request_deadline" id="request_deadline">
+    </div>
+
+    <div>
+        <label for="transport_deadline">Transport deadline</label>
+        <input type="date" name="transport_deadline" id="transport_deadline">
+    </div>
+
+    <div>
+        <label for="destination_longitude">Destination longitude</label>
+        <input type="number" name="destination_longitude" id="destination_longitude">
+        <label for="destination_latitude">Destination latitude</label>
+        <input type="number" name="destination_latitude" id="destination_latitude">
+    </div>
+    <div>
+        <label for="supply_time_window_start">Supply time start</label>
+        <input type="time" name="supply_time_window_start" id="supply_time_window_start">
+        <label for="supply_time_window_start">Supply time end</label>
+        <input type="time" name="supply_time_window_end" id="supply_time_window_end">
+    </div>
+    <fieldset>
+        <legend>Select the product you want to request:</legend>
+        {% for product in products %}
+        <label for="product">{{ product.label }}</label>
+        <input type="radio" name="product" id="product" value="{{ product.id }}">
+        {% endfor %}
+    </fieldset>
+    <input type="submit" value="Create">
+</form>
+{% endblock %}

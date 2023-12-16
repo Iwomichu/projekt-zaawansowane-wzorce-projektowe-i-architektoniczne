@@ -24,6 +24,7 @@ class Config(BaseModel):
     admin_login: str
     admin_password: str
     database: DatabaseConfig
+    min_days_to_proceed: int = 5
 
     @staticmethod
     def from_environmental_variables():

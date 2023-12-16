@@ -106,7 +106,7 @@ class AddNewClientRequestWorkflow:
             )
         if datetime.combine(
             request_deadline, time(0, 0), tzinfo=timezone.utc
-        ) > self.today_provider.today() + timedelta(days=self.min_days_to_process):
+        ) < self.today_provider.today() + timedelta(days=self.min_days_to_process):
             raise ClientRequestValidationException(
                 f"Request deadline too soon. Should be at least {self.min_days_to_process} from today"
             )
