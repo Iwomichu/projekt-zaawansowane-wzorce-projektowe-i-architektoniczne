@@ -14,10 +14,10 @@ from zwpa.model import (
 from zwpa.model import UserRoleAssignment
 
 from zwpa.model import User
-from zwpa.workflows.AddNewClientRequestWorkflow import TodayProvider
-from zwpa.workflows.GetClientRequestsWorkflow import ClientRequestView
-from zwpa.workflows.ListTransportRequestsWorkflow import TransportRequestView
-from zwpa.workflows.ListUserRolesWorkflow import UserRolesView
+from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import TodayProvider
+from zwpa.workflows.client_requests.GetClientRequestsWorkflow import ClientRequestView
+from zwpa.workflows.transport.ListTransportRequestsWorkflow import TransportRequestView
+from zwpa.workflows.user.ListUserRolesWorkflow import UserRolesView
 
 
 class Fixtures:

@@ -3,11 +3,11 @@ from dataclasses import asdict
 from typing import Annotated
 from fastapi import APIRouter, Depends, Form, Request
 from zwpa.model import UserRole
-from zwpa.workflows.AuthenticateUserWorkflow import AuthenticateUserWorkflow
+from zwpa.workflows.user.AuthenticateUserWorkflow import AuthenticateUserWorkflow
 
-from zwpa.workflows.CreateUserWorkflow import CreateUserWorkflow
-from zwpa.workflows.ListUserRolesWorkflow import ListUserRolesWorkflow
-from zwpa.workflows.ModifyUserRolesWorkflow import ModifyUserRolesWorkflow
+from zwpa.workflows.user.CreateUserWorkflow import CreateUserWorkflow
+from zwpa.workflows.user.ListUserRolesWorkflow import ListUserRolesWorkflow
+from zwpa.workflows.user.ModifyUserRolesWorkflow import ModifyUserRolesWorkflow
 from .shared import get_current_user_id, session_maker, templates
 
 router = APIRouter(

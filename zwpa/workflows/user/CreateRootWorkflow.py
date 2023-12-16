@@ -3,8 +3,8 @@ from sqlalchemy.orm import sessionmaker, Session
 from zwpa.config import Config
 from zwpa.exceptions.UserAlreadyExistsException import UserAlreadyExistsException
 from zwpa.model import UserRole
-from zwpa.workflows.CreateUserWorkflow import CreateUserWorkflow
-from zwpa.workflows.ModifyUserRolesWorkflow import ModifyUserRolesWorkflow
+from zwpa.workflows.user.CreateUserWorkflow import CreateUserWorkflow
+from zwpa.workflows.user.ModifyUserRolesWorkflow import ModifyUserRolesWorkflow
 
 
 class CreateRootWorkflow:

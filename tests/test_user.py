@@ -3,16 +3,16 @@ from tests.fixtures import Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
 from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
 from zwpa.model import User, UserRole, UserRoleAssignment
-from zwpa.workflows.AuthenticateUserWorkflow import AuthenticateUserWorkflow
-from zwpa.workflows.CreateUserWorkflow import CreateUserWorkflow
+from zwpa.workflows.user.AuthenticateUserWorkflow import AuthenticateUserWorkflow
+from zwpa.workflows.user.CreateUserWorkflow import CreateUserWorkflow
 from zwpa.exceptions.UserAlreadyExistsException import UserAlreadyExistsException
 from zwpa.exceptions.UserDoesNotExist import UserDoesNotExist
 from zwpa.exceptions.UserHasDifferentPassword import UserHasDifferentPassword
 from zwpa.exceptions.UserHasNoLoginAttemptsLeft import UserHasNoLoginAttemptsLeft
 
 from zwpa.model import LOGIN_ATTEMPTS
-from zwpa.workflows.ListUserRolesWorkflow import ListUserRolesWorkflow, UserRolesView
-from zwpa.workflows.ModifyUserRolesWorkflow import ModifyUserRolesWorkflow
+from zwpa.workflows.user.ListUserRolesWorkflow import ListUserRolesWorkflow, UserRolesView
+from zwpa.workflows.user.ModifyUserRolesWorkflow import ModifyUserRolesWorkflow
 
 
 class UserTestCase(TestCaseWithDatabase):

@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
 from zwpa.config import Config
-from zwpa.workflows.AuthenticateUserWorkflow import AuthenticateUserWorkflow
+from zwpa.workflows.user.AuthenticateUserWorkflow import AuthenticateUserWorkflow
 
 
 config = Config.from_environmental_variables()

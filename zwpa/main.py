@@ -4,7 +4,7 @@ from typing_extensions import Annotated
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 
-from zwpa.workflows.CreateRootWorkflow import CreateRootWorkflow
+from zwpa.workflows.user.CreateRootWorkflow import CreateRootWorkflow
 from .model import Base
 from .routers.shared import (
     session_maker,

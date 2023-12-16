@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
 
-from zwpa.workflows.GetClientRequestsWorkflow import GetClientRequestsWorkflow
+from zwpa.workflows.client_requests.GetClientRequestsWorkflow import GetClientRequestsWorkflow
 from .shared import get_current_user_id, session_maker
 
 router = APIRouter(

@@ -1,7 +1,7 @@
 from tests.fixtures import Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
 from zwpa.model import UserRole
-from zwpa.workflows.ListTransportRequestsWorkflow import ListTransportRequestsWorkflow
+from zwpa.workflows.transport.ListTransportRequestsWorkflow import ListTransportRequestsWorkflow
 
 
 class TransportTestCase(TestCaseWithDatabase):

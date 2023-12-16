@@ -5,10 +5,9 @@ from tests.fixtures import Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
 from zwpa.model import Transport, TransportRequest, UserRole
 from zwpa.model import ClientRequest
-from zwpa.model import User
-from zwpa.workflows.AcceptClientRequestWorkflow import AcceptClientRequestWorkflow
-from zwpa.workflows.AddNewClientRequestWorkflow import AddNewClientRequestWorkflow
-from zwpa.workflows.GetClientRequestsWorkflow import (
+from zwpa.workflows.client_requests.AcceptClientRequestWorkflow import AcceptClientRequestWorkflow
+from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import AddNewClientRequestWorkflow
+from zwpa.workflows.client_requests.GetClientRequestsWorkflow import (
     GetClientRequestsWorkflow,
 )
 
