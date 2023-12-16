@@ -1,3 +1,4 @@
+from decimal import Decimal
 from unittest import skip
 from sqlalchemy import select
 from tests.fixtures import Fixtures
@@ -13,11 +14,6 @@ from zwpa.workflows.GetClientRequestsWorkflow import (
 
 
 class ClientRequestTestCase(TestCaseWithDatabase):
-    def _add_user(self, user: User) -> None:
-        with self.session_maker() as session:
-            session.add(user)
-            session.commit()
-
     def test_client_can_create_client_request(self):
         # given
         with self.session_maker(expire_on_commit=False) as session:
@@ -195,6 +191,7 @@ class ClientRequestTestCase(TestCaseWithDatabase):
             source_warehouse_id=warehouse.id,
             transport_request_deadline=client_request.request_deadline,
             load_time_window_id=load_time_window.id,
+            price=Decimal(1.00),
         )
 
         # then
@@ -225,6 +222,7 @@ class ClientRequestTestCase(TestCaseWithDatabase):
             source_warehouse_id=warehouse.id,
             transport_request_deadline=client_request.request_deadline,
             load_time_window_id=load_time_window.id,
+            price=Decimal(1.00),
         )
 
         # then
@@ -243,4 +241,7 @@ class ClientRequestTestCase(TestCaseWithDatabase):
             self.assertEqual(client_request.unit_count, transport.unit_count)
             self.assertEqual(
                 client_request.request_deadline, transport_request.request_deadline
+            )
+            self.assertEqual(
+                Decimal(1.00), transport.price
             )

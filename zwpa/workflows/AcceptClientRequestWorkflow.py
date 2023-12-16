@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from sqlalchemy.orm import sessionmaker, Session
 
 from zwpa.model import (
@@ -40,6 +41,7 @@ class AcceptClientRequestWorkflow:
         source_warehouse_id: int,
         transport_request_deadline: date,
         load_time_window_id: int,
+        price: Decimal,
     ) -> None:
         with self.session_maker() as session:
             if not self.__is_user_of_role(session, user_id, role=UserRole.CLERK):
@@ -51,6 +53,7 @@ class AcceptClientRequestWorkflow:
                 source_warehouse_id=source_warehouse_id,
                 load_time_window_id=load_time_window_id,
                 transport_request_deadline=transport_request_deadline,
+                price=price,
             )
             self.__mark_request_as_accepted(
                 session=session, client_request_id=client_request_id
@@ -79,6 +82,7 @@ class AcceptClientRequestWorkflow:
         source_warehouse_id: int,
         transport_request_deadline: date,
         load_time_window_id: int,
+        price: Decimal,
     ) -> None:
         warehouse = session.get_one(Warehouse, source_warehouse_id)
         client_request = session.get_one(ClientRequest, client_request_id)
@@ -88,10 +92,12 @@ class AcceptClientRequestWorkflow:
             destination_location_id=client_request.destination_id,
             load_time_window_id=load_time_window_id,
             destination_time_window_id=client_request.supply_time_window_id,
+            price=price,
         )
         transport_request = TransportRequest(
             request_deadline=transport_request_deadline,
             transport=transport,
+            accepted=False,
         )
         session.add(transport)
         session.add(transport_request)

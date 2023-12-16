@@ -1,12 +1,22 @@
 from datetime import date, datetime, time
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from zwpa.model import ClientRequest, Location, Product, TimeWindow, UserRole, Warehouse
+from zwpa.model import (
+    ClientRequest,
+    Location,
+    Product,
+    TimeWindow,
+    Transport,
+    TransportRequest,
+    UserRole,
+    Warehouse,
+)
 from zwpa.model import UserRoleAssignment
 
 from zwpa.model import User
 from zwpa.workflows.AddNewClientRequestWorkflow import TodayProvider
 from zwpa.workflows.GetClientRequestsWorkflow import ClientRequestView
+from zwpa.workflows.ListTransportRequestsWorkflow import TransportRequestView
 from zwpa.workflows.ListUserRolesWorkflow import UserRolesView
 
 
@@ -34,6 +44,22 @@ class Fixtures:
             login_attempts_left=login_attempts_left,
         )
         session.add(user)
+        return user
+
+    @classmethod
+    def new_transporter(
+        cls,
+        session: Session,
+        id: int | None = None,
+        login: str = "user",
+        password: bytes = b"password",
+        login_attempts_left: int = 3,
+    ) -> User:
+        if id is None:
+            id = cls.next_id()
+
+        user = cls.new_user(session, id=id)
+        cls.new_role_assignment(session, user_id=id, role=UserRole.TRANSPORT)
         return user
 
     @classmethod
@@ -218,4 +244,89 @@ class Fixtures:
             is_client=is_client,
             is_supplier=is_supplier,
             is_transport=is_transport,
+        )
+
+    @classmethod
+    def new_transport(
+        cls,
+        session: Session,
+        unit_count: int = 1,
+        price: Decimal = Decimal(1.0),
+        pickup_location_id: int | None = None,
+        destination_location_id: int | None = None,
+        load_time_window_id: int | None = None,
+        destination_time_window_id: int | None = None,
+        id: int | None = None,
+    ) -> Transport:
+        if pickup_location_id is None:
+            pickup_location_id = cls.new_location(session).id
+
+        if destination_location_id is None:
+            destination_location_id = cls.new_location(session).id
+
+        if load_time_window_id is None:
+            load_time_window_id = cls.new_time_window(session).id
+
+        if destination_time_window_id is None:
+            destination_time_window_id = cls.new_time_window(session).id
+
+        transport = Transport(
+            id=id if id is not None else cls.next_id(),
+            unit_count=unit_count,
+            price=price,
+            pickup_location_id=pickup_location_id,
+            destination_location_id=destination_location_id,
+            load_time_window_id=load_time_window_id,
+            destination_time_window_id=destination_time_window_id,
+        )
+        session.add(transport)
+        return transport
+
+    @classmethod
+    def new_transport_request(
+        cls,
+        session: Session,
+        transport_id: int,
+        request_deadline: date = date(2020, 1, 1),
+        accepted: bool = False,
+        id: int | None = None,
+    ) -> TransportRequest:
+        transport_request = TransportRequest(
+            transport_id=transport_id,
+            id=id if id is not None else cls.next_id(),
+            request_deadline=request_deadline,
+            accepted=accepted,
+        )
+        session.add(transport_request)
+        return transport_request
+
+    @classmethod
+    def new_transport_request_view(
+        cls,
+        request_id: int,
+        unit_count: int = 1,
+        price: Decimal = Decimal(1.0),
+        pickup_location_longitude: float = 12.33,
+        pickup_location_latitude: float = 8.55,
+        destination_location_longitude: float = 12.33,
+        destination_location_latitude: float = 8.55,
+        load_time_window_start: time = time(6, 0),
+        load_time_window_end: time = time(15, 0),
+        destination_time_window_start: time = time(6, 0),
+        destination_time_window_end: time = time(15, 0),
+        request_deadline: date = date(2020, 1, 1),
+    ) -> TransportRequestView:
+        return TransportRequestView(
+            request_id=request_id,
+            unit_count=unit_count,
+            price=price,
+            pickup_location_longitude=pickup_location_longitude,
+            pickup_location_latitude=pickup_location_latitude,
+            destination_location_longitude=destination_location_longitude,
+            destination_location_latitude=destination_location_latitude,
+            load_time_window_start=load_time_window_start,
+            load_time_window_end=load_time_window_end,
+            destination_time_window_start=destination_time_window_start,
+            destination_time_window_end=destination_time_window_end,
+            request_deadline=request_deadline,
         )
