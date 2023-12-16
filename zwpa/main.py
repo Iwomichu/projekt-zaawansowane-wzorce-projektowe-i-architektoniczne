@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
 
 from zwpa.workflows.AuthenticateUserWorkflow import AuthenticateUserWorkflow
+from zwpa.workflows.CreateRootWorkflow import CreateRootWorkflow
 from zwpa.workflows.GetClientRequestsWorkflow import GetClientRequestsWorkflow
 from zwpa.workflows.ListUserRolesWorkflow import ListUserRolesWorkflow
 from .config import Config
@@ -37,15 +38,18 @@ modify_user_roles_workflow = ModifyUserRolesWorkflow(session_maker)
 authenticate_user_workflow = AuthenticateUserWorkflow(session_maker)
 get_client_requests_workflow = GetClientRequestsWorkflow(session_maker)
 list_user_roles_workflow = ListUserRolesWorkflow(session_maker)
+create_root_workflow = CreateRootWorkflow(
+    session_maker,
+    config=config,
+    create_user_workflow=create_user_workflow,
+    modify_user_roles_workflow=modify_user_roles_workflow,
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
-    admin_id = create_user_workflow.create_user(
-        config.admin_login, config.admin_password
-    )
-    modify_user_roles_workflow.modify_user_roles(admin_id, list(UserRole))
+    create_root_workflow.create_root_user()
     yield
 
 
@@ -149,8 +153,10 @@ def post_user_roles_update_form(
         user_roles.append(UserRole.SUPPLIER)
     if is_transport:
         user_roles.append(UserRole.TRANSPORT)
-    modify_user_roles_workflow.modify_user_roles_as_admin(admin_id=user_id, user_id=target_id, roles=user_roles)
-    
+    modify_user_roles_workflow.modify_user_roles_as_admin(
+        admin_id=user_id, user_id=target_id, roles=user_roles
+    )
+
     user_roles_views = list_user_roles_workflow.list_user_roles_workflow(user_id)
     return templates.TemplateResponse(
         "userRolesPage.html",
