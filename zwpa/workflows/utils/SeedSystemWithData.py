@@ -1,4 +1,7 @@
+from decimal import Decimal
+import random
 from faker import Faker
+from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, Session
 from zwpa.model import *
 
@@ -10,12 +13,20 @@ class SeedSystemWithDataWorkflow:
 
     def seed(self) -> None:
         with self.session_maker() as session:
+            if self._is_system_seeded_already(session):
+                print("System is seeded already. Seeding aborted.")
+                return
+            
             self.create_users_with_role(session, role=UserRole.CLERK, count=5)
-            self.create_users_with_role(session, role=UserRole.CLIENT, count=5)
+            client_ids = self.create_users_with_role(session, role=UserRole.CLIENT, count=5)
             self.create_users_with_role(session, role=UserRole.TRANSPORT, count=5)
             self.create_users_with_role(session, role=UserRole.SUPPLIER, count=5)
-            self.create_products(session, count=10)
+            product_ids = self.create_products(session, count=10)
             self.create_warehouses(session, count=20)
+            self.create_client_requests(session, count=10, client_ids=client_ids, product_ids=product_ids)
+
+    def _is_system_seeded_already(self, session: Session) -> bool:
+        return session.execute(select(Product)).first() is not None
 
     def create_time_window(self) -> TimeWindow:
         return TimeWindow(
@@ -39,6 +50,7 @@ class SeedSystemWithDataWorkflow:
             for _ in range(count)
         ]
         session.add_all(products)
+        session.commit()
         return [product.id for product in products]
 
     def create_warehouses(self, session: Session, count: int) -> list[int]:
@@ -77,3 +89,28 @@ class SeedSystemWithDataWorkflow:
         session.add_all(role_assignments)
         session.commit()
         return user_ids
+
+    def create_client_requests(self, session: Session, count: int, client_ids: list[int], product_ids: list[int]) -> list[int]:
+        clients = list(session.execute(select(User).where(User.id.in_(client_ids))).scalars())
+        products = list(session.execute(select(Product).where(Product.id.in_(product_ids))).scalars())
+        requests = []
+        for _ in range(count):
+            client = random.choice(clients)
+            product = random.choice(products)
+            location = self.create_location()
+            time_window = self.create_time_window()
+            request = ClientRequest(
+                price=Decimal(random.randint(1, 100)),
+                unit_count=random.randint(1, 10),
+                request_deadline=self.fake.date_between(date(2024, 1, 1), date(2024, 2, 1)),
+                transport_deadline=self.fake.date_between(date(2024, 2, 1), date(2024, 3, 1)),
+                accepted=False,
+                product=product,
+                client=client,
+                destination=location,
+                supply_time_window=time_window,
+            )
+            requests.append(request)
+        session.add_all(requests)
+        session.commit()
+        return [request.id for request in requests]
