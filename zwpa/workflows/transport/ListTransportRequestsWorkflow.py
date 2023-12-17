@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
 
 from zwpa.model import TransportRequest, User, UserRole, Transport
-from zwpa.workflows.AddNewClientRequestWorkflow import (
+from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
     DefaultTodayProvider,
     TodayProvider,
 )

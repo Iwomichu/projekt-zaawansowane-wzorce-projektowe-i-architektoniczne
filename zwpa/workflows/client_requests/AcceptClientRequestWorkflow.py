@@ -10,7 +10,7 @@ from zwpa.model import (
     UserRole,
     Warehouse,
 )
-from zwpa.workflows.AddNewClientRequestWorkflow import (
+from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
     DefaultTodayProvider,
     TodayProvider,
 )

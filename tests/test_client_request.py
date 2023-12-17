@@ -33,7 +33,7 @@ class ClientRequestTestCase(TestCaseWithDatabase):
 
         # when
         AddNewClientRequestWorkflow(
-            self.session_maker, min_days_to_process=1
+            self.session_maker, min_days_to_process=1, today_provider=Fixtures.new_today_provider()
         ).add_new_client_request(
             user_id=user.id,
             price=expected_client_request.price,

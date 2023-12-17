@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timezone
 from decimal import Decimal
 from sqlalchemy.orm import Session
 from zwpa.model import (
@@ -130,8 +130,8 @@ class Fixtures:
         destination_id: int | None = None,
         price: Decimal = Decimal("0.99"),
         unit_count: int = 1,
-        request_deadline: date = date(2020, 1, 1),
-        transport_deadline: date = date(2020, 2, 1),
+        request_deadline: date = date(2020, 2, 1),
+        transport_deadline: date = date(2020, 3, 1),
         accepted: bool = False,
         id: int | None = None,
     ) -> ClientRequest:
@@ -175,8 +175,8 @@ class Fixtures:
         supply_time_window_end: time = time(15, 0),
         price: Decimal = Decimal("0.99"),
         unit_count: int = 1,
-        request_deadline: date = date(2020, 1, 1),
-        transport_deadline: date = date(2020, 2, 1),
+        request_deadline: date = date(2020, 2, 1),
+        transport_deadline: date = date(2020, 3, 1),
         accepted: bool = False,
     ) -> ClientRequestView:
         return ClientRequestView(
@@ -217,7 +217,7 @@ class Fixtures:
 
     @classmethod
     def new_today_provider(
-        cls, today: datetime = datetime(2020, 1, 1)
+        cls, today: datetime = datetime(2020, 1, 1, tzinfo=timezone.utc)
     ) -> TodayProvider:
         class FakeTodayProvider:
             def today(self) -> datetime:
@@ -287,7 +287,7 @@ class Fixtures:
         cls,
         session: Session,
         transport_id: int,
-        request_deadline: date = date(2020, 1, 1),
+        request_deadline: date = date(2020, 2, 1),
         accepted: bool = False,
         id: int | None = None,
     ) -> TransportRequest:
@@ -314,7 +314,7 @@ class Fixtures:
         load_time_window_end: time = time(15, 0),
         destination_time_window_start: time = time(6, 0),
         destination_time_window_end: time = time(15, 0),
-        request_deadline: date = date(2020, 1, 1),
+        request_deadline: date = date(2020, 2, 1),
     ) -> TransportRequestView:
         return TransportRequestView(
             request_id=request_id,
