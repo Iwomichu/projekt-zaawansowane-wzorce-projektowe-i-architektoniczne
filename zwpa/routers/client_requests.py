@@ -117,3 +117,24 @@ def get_accept_client_request_form(request: Request, client_request_id: int, use
         "acceptClientRequestPage.html",
         {"request": request, "data": asdict(client_request_acceptance_form_data)},
     )
+
+
+@router.post("/accept")
+def post_accept_client_request_form(
+    request: Request,
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    client_request_id: int,
+    warehouse_id: Annotated[int, Form()],
+    transport_request_deadline: Annotated[date, Form()],
+    time_window_id: Annotated[int, Form()],
+    price_for_transport: Annotated[Decimal, Form()],
+    ):
+    accept_client_request_workflow.accept_client_request(
+        user_id=user_id,
+        client_request_id=client_request_id,
+        warehouse_id=warehouse_id,
+        transport_request_deadline=transport_request_deadline,
+        time_window_id=time_window_id,
+        price_for_transport=price_for_transport,
+    )
+    return RedirectResponse(url="/client_requests/all", status_code=303)

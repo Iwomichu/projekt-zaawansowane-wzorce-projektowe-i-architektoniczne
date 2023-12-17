@@ -196,9 +196,9 @@ class ClientRequestTestCase(TestCaseWithDatabase):
         ).accept_client_request(
             user_id=clerk.id,
             client_request_id=client_request.id,
-            source_warehouse_id=warehouse.id,
+            warehouse_id=warehouse.id,
             transport_request_deadline=client_request.request_deadline,
-            load_time_window_id=load_time_window.id,
+            time_window_id=load_time_window.id,
             price_for_transport=Decimal(1.00),
         )
 
@@ -227,9 +227,9 @@ class ClientRequestTestCase(TestCaseWithDatabase):
         ).accept_client_request(
             user_id=clerk.id,
             client_request_id=client_request.id,
-            source_warehouse_id=warehouse.id,
+            warehouse_id=warehouse.id,
             transport_request_deadline=client_request.request_deadline,
-            load_time_window_id=load_time_window.id,
+            time_window_id=load_time_window.id,
             price_for_transport=Decimal(1.00),
         )
 

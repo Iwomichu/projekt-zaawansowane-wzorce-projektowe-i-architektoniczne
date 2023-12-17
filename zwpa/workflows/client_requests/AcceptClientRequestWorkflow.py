@@ -38,9 +38,9 @@ class AcceptClientRequestWorkflow:
         self,
         user_id: int,
         client_request_id: int,
-        source_warehouse_id: int,
+        warehouse_id: int,
         transport_request_deadline: date,
-        load_time_window_id: int,
+        time_window_id: int,
         price_for_transport: Decimal,
     ) -> None:
         with self.session_maker() as session:
@@ -50,8 +50,8 @@ class AcceptClientRequestWorkflow:
             self.__add_new_transport_with_request(
                 session=session,
                 client_request_id=client_request_id,
-                source_warehouse_id=source_warehouse_id,
-                load_time_window_id=load_time_window_id,
+                source_warehouse_id=warehouse_id,
+                load_time_window_id=time_window_id,
                 transport_request_deadline=transport_request_deadline,
                 price=price_for_transport,
             )
