@@ -5,6 +5,7 @@ import re
 from zwpa.types import McfHash
 from sqlalchemy import (
     Boolean,
+    Column,
     Date,
     Dialect,
     Float,
@@ -13,6 +14,7 @@ from sqlalchemy import (
     LargeBinary,
     MetaData,
     String,
+    Table,
     Time,
     TypeDecorator,
 )
@@ -211,6 +213,14 @@ class TransportRequest(Base):
     transport: Mapped["Transport"] = relationship()
 
 
+warehouse_time_windows_associate_table = Table(
+    "warehouse_time_windows_associate_table",
+    Base.metadata,
+    Column("warehouse_id", ForeignKey("warehouses.id"), primary_key=True),
+    Column("time_window_id", ForeignKey("time_windows.id"), primary_key=True),
+)
+
+
 class Warehouse(Base):
     __tablename__ = "warehouses"
 
@@ -219,3 +229,4 @@ class Warehouse(Base):
 
     location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
     location: Mapped["Location"] = relationship()
+    load_time_windows: Mapped[list["TimeWindow"]] = relationship(secondary=warehouse_time_windows_associate_table)

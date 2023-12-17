@@ -16,8 +16,29 @@ from zwpa.model import UserRoleAssignment
 from zwpa.model import User
 from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import TodayProvider
 from zwpa.workflows.client_requests.GetClientRequestsWorkflow import ClientRequestView
+from zwpa.workflows.client_requests.HandleClientRequestAcceptanceFormWorkflow import (
+    ClientRequestAcceptanceFormData,
+    TimeWindowView,
+    WarehouseView,
+)
 from zwpa.workflows.transport.ListTransportRequestsWorkflow import TransportRequestView
 from zwpa.workflows.user.ListUserRolesWorkflow import UserRolesView
+
+
+LONGITUDE = 8.33
+LATITUDE = 12.11
+LOGIN = "user"
+PASSWORD = b"password"
+PRODUCT_LABEL = "BOX"
+PRODUCT_UNIT = "ISO_CONTAINER"
+TIME_WINDOW_START = time(6, 0)
+TIME_WINDOW_END = time(15, 0)
+PRICE = Decimal(1.0)
+TODAY_DATE = date(2020, 1, 1)
+REQUEST_DEADLINE = date(2020, 2, 1)
+TRANSPORT_DEADLINE = date(2020, 3, 1)
+UNIT_COUNT = 1
+WAREHOUSE_LABEL = "Test Warehouse"
 
 
 class Fixtures:
@@ -33,8 +54,8 @@ class Fixtures:
         cls,
         session: Session,
         id: int | None = None,
-        login: str = "user",
-        password: bytes = b"password",
+        login: str = LOGIN,
+        password: bytes = PASSWORD,
         login_attempts_left: int = 3,
     ) -> User:
         user = User(
@@ -47,19 +68,27 @@ class Fixtures:
         return user
 
     @classmethod
-    def new_transporter(
+    def new_user_with_roles(
         cls,
         session: Session,
+        roles: list[UserRole],
         id: int | None = None,
-        login: str = "user",
-        password: bytes = b"password",
+        login: str = LOGIN,
+        password: bytes = PASSWORD,
         login_attempts_left: int = 3,
     ) -> User:
         if id is None:
             id = cls.next_id()
 
-        user = cls.new_user(session, id=id)
-        cls.new_role_assignment(session, user_id=id, role=UserRole.TRANSPORT)
+        user = cls.new_user(
+            session,
+            id=id,
+            login=login,
+            password=password,
+            login_attempts_left=login_attempts_left,
+        )
+        for role in roles:
+            cls.new_role_assignment(session, user_id=id, role=role)
         return user
 
     @classmethod
@@ -81,8 +110,8 @@ class Fixtures:
         cls,
         session: Session,
         id: int | None = None,
-        label: str = "BOXES",
-        unit: str = "ISO_CONTAINER",
+        label: str = PRODUCT_LABEL,
+        unit: str = PRODUCT_UNIT,
     ) -> Product:
         product = Product(
             id=id if id is not None else cls.next_id(), label=label, unit=unit
@@ -95,8 +124,8 @@ class Fixtures:
         cls,
         session: Session,
         id: int | None = None,
-        start: time = time(6, 0),
-        end: time = time(15, 0),
+        start: time = TIME_WINDOW_START,
+        end: time = TIME_WINDOW_END,
     ) -> TimeWindow:
         time_window = TimeWindow(
             id=id if id is not None else cls.next_id(), start=start, end=end
@@ -109,8 +138,8 @@ class Fixtures:
         cls,
         session: Session,
         id: int | None = None,
-        longitude: float = 12.33,
-        latitude: float = 8.55,
+        longitude: float = LONGITUDE,
+        latitude: float = LATITUDE,
     ) -> Location:
         location = Location(
             id=id if id is not None else cls.next_id(),
@@ -128,10 +157,10 @@ class Fixtures:
         client_id: int | None = None,
         supply_time_window_id: int | None = None,
         destination_id: int | None = None,
-        price: Decimal = Decimal("0.99"),
-        unit_count: int = 1,
-        request_deadline: date = date(2020, 2, 1),
-        transport_deadline: date = date(2020, 3, 1),
+        price: Decimal = PRICE,
+        unit_count: int = UNIT_COUNT,
+        request_deadline: date = REQUEST_DEADLINE,
+        transport_deadline: date = TRANSPORT_DEADLINE,
         accepted: bool = False,
         id: int | None = None,
     ) -> ClientRequest:
@@ -167,16 +196,16 @@ class Fixtures:
         cls,
         client_id: int,
         id: int | None = None,
-        product_name: str = "BOXES",
-        product_unit: str = "ISO_CONTAINER",
-        destination_longitude: float = 12.33,
-        destination_latitude: float = 8.55,
-        supply_time_window_start: time = time(6, 0),
-        supply_time_window_end: time = time(15, 0),
-        price: Decimal = Decimal("0.99"),
-        unit_count: int = 1,
-        request_deadline: date = date(2020, 2, 1),
-        transport_deadline: date = date(2020, 3, 1),
+        product_name: str = PRODUCT_LABEL,
+        product_unit: str = PRODUCT_UNIT,
+        destination_longitude: float = LONGITUDE,
+        destination_latitude: float = LATITUDE,
+        supply_time_window_start: time = TIME_WINDOW_START,
+        supply_time_window_end: time = TIME_WINDOW_END,
+        price: Decimal = PRICE,
+        unit_count: int = UNIT_COUNT,
+        request_deadline: date = REQUEST_DEADLINE,
+        transport_deadline: date = TRANSPORT_DEADLINE,
         accepted: bool = False,
     ) -> ClientRequestView:
         return ClientRequestView(
@@ -200,17 +229,24 @@ class Fixtures:
         cls,
         session: Session,
         location_id: int | None = None,
-        label: str = "Test Warehouse",
+        label: str = WAREHOUSE_LABEL,
+        load_time_window_id: int | None = None,
         id: int | None = None,
     ) -> Warehouse:
         if location_id is None:
             location_id = cls.next_id()
             cls.new_location(session, id=location_id)
 
+        if load_time_window_id is not None:
+            time_window = session.get(TimeWindow, load_time_window_id)
+        else:
+            time_window = cls.new_time_window(session)
+
         warehouse = Warehouse(
             id=id if id is not None else cls.next_id(),
             location_id=location_id,
             label=label,
+            load_time_windows=[time_window],
         )
         session.add(warehouse)
         return warehouse
@@ -229,7 +265,7 @@ class Fixtures:
     def new_user_roles_view(
         cls,
         user_id: int,
-        user_login: str = "user",
+        user_login: str = LOGIN,
         is_admin: bool = False,
         is_clerk: bool = False,
         is_client: bool = False,
@@ -250,8 +286,8 @@ class Fixtures:
     def new_transport(
         cls,
         session: Session,
-        unit_count: int = 1,
-        price: Decimal = Decimal(1.0),
+        unit_count: int = UNIT_COUNT,
+        price: Decimal = PRICE,
         pickup_location_id: int | None = None,
         destination_location_id: int | None = None,
         load_time_window_id: int | None = None,
@@ -287,7 +323,7 @@ class Fixtures:
         cls,
         session: Session,
         transport_id: int,
-        request_deadline: date = date(2020, 2, 1),
+        request_deadline: date = REQUEST_DEADLINE,
         accepted: bool = False,
         id: int | None = None,
     ) -> TransportRequest:
@@ -304,17 +340,17 @@ class Fixtures:
     def new_transport_request_view(
         cls,
         request_id: int,
-        unit_count: int = 1,
-        price: Decimal = Decimal(1.0),
-        pickup_location_longitude: float = 12.33,
-        pickup_location_latitude: float = 8.55,
-        destination_location_longitude: float = 12.33,
-        destination_location_latitude: float = 8.55,
-        load_time_window_start: time = time(6, 0),
-        load_time_window_end: time = time(15, 0),
-        destination_time_window_start: time = time(6, 0),
-        destination_time_window_end: time = time(15, 0),
-        request_deadline: date = date(2020, 2, 1),
+        unit_count: int = UNIT_COUNT,
+        price: Decimal = PRICE,
+        pickup_location_longitude: float = LONGITUDE,
+        pickup_location_latitude: float = LATITUDE,
+        destination_location_longitude: float = LONGITUDE,
+        destination_location_latitude: float = LATITUDE,
+        load_time_window_start: time = TIME_WINDOW_START,
+        load_time_window_end: time = TIME_WINDOW_END,
+        destination_time_window_start: time = TIME_WINDOW_START,
+        destination_time_window_end: time = TIME_WINDOW_END,
+        request_deadline: date = REQUEST_DEADLINE,
     ) -> TransportRequestView:
         return TransportRequestView(
             request_id=request_id,
@@ -329,4 +365,36 @@ class Fixtures:
             destination_time_window_start=destination_time_window_start,
             destination_time_window_end=destination_time_window_end,
             request_deadline=request_deadline,
+        )
+
+    @classmethod
+    def new_time_window_view(cls, time_window_id: int) -> TimeWindowView:
+        return TimeWindowView(
+            id=time_window_id, start=TIME_WINDOW_START, end=TIME_WINDOW_END
+        )
+
+    @classmethod
+    def new_warehouse_view(
+        cls, warehouse_id: int, time_window_id: int
+    ) -> WarehouseView:
+        return WarehouseView(
+            id=warehouse_id,
+            label=WAREHOUSE_LABEL,
+            load_time_windows=[cls.new_time_window_view(time_window_id)],
+        )
+
+    @classmethod
+    def new_client_request_acceptance_form_data(
+        cls,
+        client_id: int,
+        client_request_id: int,
+        warehouse_id: int,
+        time_window_id: int,
+    ) -> ClientRequestAcceptanceFormData:
+        client_request = cls.new_client_request_view(
+            id=client_request_id, client_id=client_id
+        )
+        warehouse = cls.new_warehouse_view(warehouse_id, time_window_id=time_window_id)
+        return ClientRequestAcceptanceFormData(
+            client_request=client_request, warehouses=[warehouse]
         )

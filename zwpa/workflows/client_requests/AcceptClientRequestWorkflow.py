@@ -41,7 +41,7 @@ class AcceptClientRequestWorkflow:
         source_warehouse_id: int,
         transport_request_deadline: date,
         load_time_window_id: int,
-        price: Decimal,
+        price_for_transport: Decimal,
     ) -> None:
         with self.session_maker() as session:
             if not self.__is_user_of_role(session, user_id, role=UserRole.CLERK):
@@ -53,7 +53,7 @@ class AcceptClientRequestWorkflow:
                 source_warehouse_id=source_warehouse_id,
                 load_time_window_id=load_time_window_id,
                 transport_request_deadline=transport_request_deadline,
-                price=price,
+                price=price_for_transport,
             )
             self.__mark_request_as_accepted(
                 session=session, client_request_id=client_request_id

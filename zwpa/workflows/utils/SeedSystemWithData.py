@@ -17,6 +17,12 @@ class SeedSystemWithDataWorkflow:
             self.create_products(session, count=10)
             self.create_warehouses(session, count=20)
 
+    def create_time_window(self) -> TimeWindow:
+        return TimeWindow(
+            start=time(0, 0),
+            end=self.fake.time_object(),
+        )
+
     def create_location(self) -> Location:
         return Location(
             label=self.fake.street_address(),
@@ -40,6 +46,7 @@ class SeedSystemWithDataWorkflow:
             Warehouse(
                 label=self.fake.word(),
                 location=self.create_location(),
+                load_time_windows=[self.create_time_window(), self.create_time_window()]
             )
             for _ in range(count)
         ]

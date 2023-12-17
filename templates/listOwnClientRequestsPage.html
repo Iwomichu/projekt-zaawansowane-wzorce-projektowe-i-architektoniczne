@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Your client requests{% endblock %}
+{% block head %}
+{% endblock %}
+{% block content %}
+
+<h1>List of your client requests</h1>
+<table>
+    <tr>
+        <th>Id</th>
+        <th>Price</th>
+        <th>Unit count</th>
+        <th>Request deadline</th>
+        <th>Transport deadline</th>
+        <th>Destination longitude</th>
+        <th>Destination latitude</th>
+        <th>Supply time window start</th>
+        <th>Supply time window end</th>
+        <th>Product name</th>
+        <th>Product unit</th>
+        <th>Accepted</th>
+    </tr>
+    {% for client_request in client_requests %}
+    <tr>
+        <td>{{client_request.id}}</td>
+        <td>{{client_request.price}}</td>
+        <td>{{client_request.unit_count}}</td>
+        <td>{{client_request.request_deadline}}</td>
+        <td>{{client_request.transport_deadline}}</td>
+        <td>{{client_request.destination_longitude}}</td>
+        <td>{{client_request.destination_latitude}}</td>
+        <td>{{client_request.supply_time_window_start}}</td>
+        <td>{{client_request.supply_time_window_end}}</td>
+        <td>{{client_request.product_name}}</td>
+        <td>{{client_request.product_unit}}</td>
+        <td>{{client_request.accepted}}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

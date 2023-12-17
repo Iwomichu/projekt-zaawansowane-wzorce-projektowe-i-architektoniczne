@@ -5,10 +5,17 @@ from tests.fixtures import Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
 from zwpa.model import Transport, TransportRequest, UserRole
 from zwpa.model import ClientRequest
-from zwpa.workflows.client_requests.AcceptClientRequestWorkflow import AcceptClientRequestWorkflow
-from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import AddNewClientRequestWorkflow
+from zwpa.workflows.client_requests.AcceptClientRequestWorkflow import (
+    AcceptClientRequestWorkflow,
+)
+from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
+    AddNewClientRequestWorkflow,
+)
 from zwpa.workflows.client_requests.GetClientRequestsWorkflow import (
     GetClientRequestsWorkflow,
+)
+from zwpa.workflows.client_requests.HandleClientRequestAcceptanceFormWorkflow import (
+    HandleClientRequestAcceptanceFormWorkflow,
 )
 
 
@@ -33,7 +40,9 @@ class ClientRequestTestCase(TestCaseWithDatabase):
 
         # when
         AddNewClientRequestWorkflow(
-            self.session_maker, min_days_to_process=1, today_provider=Fixtures.new_today_provider()
+            self.session_maker,
+            min_days_to_process=1,
+            today_provider=Fixtures.new_today_provider(),
         ).add_new_client_request(
             user_id=user.id,
             price=expected_client_request.price,
@@ -190,7 +199,7 @@ class ClientRequestTestCase(TestCaseWithDatabase):
             source_warehouse_id=warehouse.id,
             transport_request_deadline=client_request.request_deadline,
             load_time_window_id=load_time_window.id,
-            price=Decimal(1.00),
+            price_for_transport=Decimal(1.00),
         )
 
         # then
@@ -221,7 +230,7 @@ class ClientRequestTestCase(TestCaseWithDatabase):
             source_warehouse_id=warehouse.id,
             transport_request_deadline=client_request.request_deadline,
             load_time_window_id=load_time_window.id,
-            price=Decimal(1.00),
+            price_for_transport=Decimal(1.00),
         )
 
         # then
@@ -241,6 +250,27 @@ class ClientRequestTestCase(TestCaseWithDatabase):
             self.assertEqual(
                 client_request.request_deadline, transport_request.request_deadline
             )
-            self.assertEqual(
-                Decimal(1.00), transport.price
-            )
+            self.assertEqual(Decimal(1.00), transport.price)
+
+    def test_clerk_can_access_client_request_acceptance_form(self):
+        # given
+        with self.session_maker() as session:
+            client_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLIENT]).id
+            client_request_id = Fixtures.new_client_request(session, client_id=client_id).id
+            warehouse = Fixtures.new_warehouse(session)
+            warehouse_id = warehouse.id
+            time_window_id = warehouse.load_time_windows[0].id
+            clerk_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
+            session.commit()
+
+        workflow = HandleClientRequestAcceptanceFormWorkflow(self.session_maker)
+        # when
+        result = workflow.get_form_data(clerk_id, client_request_id)
+        expected = Fixtures.new_client_request_acceptance_form_data(
+            client_id=client_id,
+            client_request_id=client_request_id,
+            warehouse_id=warehouse_id,
+            time_window_id=time_window_id,
+        )
+        # then
+        self.assertEqual(result, expected)

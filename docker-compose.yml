@@ -20,4 +20,4 @@ services:
     environment:
       POSTGRES_PASSWORD: "q1!w2@e3#"
     ports:
-      - 5432
+      - 5432:5432
