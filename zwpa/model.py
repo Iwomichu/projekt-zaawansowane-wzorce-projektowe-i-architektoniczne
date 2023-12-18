@@ -211,6 +211,7 @@ class TransportRequest(Base):
     request_deadline: Mapped[date] = mapped_column(Date)
     accepted: Mapped[bool] = mapped_column(Boolean)
     transport_id: Mapped[int] = mapped_column(ForeignKey("transports.id"))
+
     transport: Mapped["Transport"] = relationship()
 
 
@@ -230,12 +231,15 @@ class Warehouse(Base):
 
     location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
     location: Mapped["Location"] = relationship()
-    load_time_windows: Mapped[list["TimeWindow"]] = relationship(secondary=warehouse_time_windows_associate_table)
+    load_time_windows: Mapped[list["TimeWindow"]] = relationship(
+        secondary=warehouse_time_windows_associate_table
+    )
 
 
 class SupplyStatus(str, Enum):
-    OFFERED = "OFFERED"
+    OFFERED_WITHOUT_REQUEST = "OFFERED_WITHOUT_REQUEST"
     REQUESTED = "REQUESTED"
+    OFFER_ACCEPTED = "OFFER_ACCEPTED"
     COMPLETE = "COMPLETE"
 
 
@@ -247,6 +251,7 @@ SupplyStatusType: pgEnum = pgEnum(
     validate_strings=True,
 )
 
+
 class Supply(Base):
     __tablename__ = "supplies"
 
@@ -255,11 +260,31 @@ class Supply(Base):
     status = mapped_column(SupplyStatusType)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
     warehouse_id: Mapped[int] = mapped_column(ForeignKey("warehouses.id"), index=True)
-    supply_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"), index=True)
-    
+    supply_time_window_id: Mapped[int] = mapped_column(
+        ForeignKey("time_windows.id"), index=True
+    )
+
     product: Mapped["Product"] = relationship(foreign_keys=[product_id])
     warehouse: Mapped["Warehouse"] = relationship(foreign_keys=[warehouse_id])
-    supply_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[supply_time_window_id])
+    supply_time_window: Mapped["TimeWindow"] = relationship(
+        foreign_keys=[supply_time_window_id]
+    )
+    supply_offers: Mapped[list["SupplyOffer"]] = relationship(back_populates="supply")
+
+
+class SupplyTransportRequest(Base):
+    __tablename__ = "supply_transport_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    supply_id: Mapped[int] = mapped_column(ForeignKey("supplies.id"), index=True)
+    transport_request_id: Mapped[int] = mapped_column(
+        ForeignKey("transport_requests.id"), index=True
+    )
+
+    supply: Mapped["Supply"] = relationship(foreign_keys=[supply_id])
+    transport_request: Mapped["TransportRequest"] = relationship(
+        foreign_keys=[transport_request_id]
+    )
 
 
 class SupplyReceipt(Base):
@@ -267,7 +292,9 @@ class SupplyReceipt(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     offer_acceptance_datetime: Mapped[datetime] = mapped_column(DateTime)
-    request_id: Mapped[int] = mapped_column(ForeignKey("supply_requests.id"), index=True)
+    request_id: Mapped[int] = mapped_column(
+        ForeignKey("supply_requests.id"), index=True
+    )
     offer_id: Mapped[int] = mapped_column(ForeignKey("supply_offers.id"), index=True)
     clerk_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
 
@@ -289,22 +316,26 @@ class SupplyRequest(Base):
     supply: Mapped["Supply"] = relationship(foreign_keys=[supply_id])
 
 
-
 class SupplyOffer(Base):
     __tablename__ = "supply_offers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     price: Mapped[decimal.Decimal] = mapped_column(NumericMoney)
     transport_deadline: Mapped[date] = mapped_column(Date)
+    accepted: Mapped[bool] = mapped_column(Boolean)
 
     supply_id: Mapped[int] = mapped_column(ForeignKey("supplies.id"), index=True)
     supplier_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     load_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
-    source_location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"), index=True)
+    source_location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id"), index=True
+    )
 
     supply: Mapped["Supply"] = relationship(foreign_keys=[supply_id])
     supplier: Mapped["User"] = relationship(foreign_keys=[supplier_id])
-    source_location: Mapped["Location"] = relationship(foreign_keys=[source_location_id])
+    source_location: Mapped["Location"] = relationship(
+        foreign_keys=[source_location_id]
+    )
     load_time_window: Mapped["TimeWindow"] = relationship(
         foreign_keys=[load_time_window_id]
     )

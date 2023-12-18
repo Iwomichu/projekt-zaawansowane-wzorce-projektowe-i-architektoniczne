@@ -105,7 +105,7 @@ class AddNewClientRequestWorkflow:
                 f"Price should be positive, but is {price}"
             )
         if datetime.combine(
-            request_deadline, time(0, 0), tzinfo=timezone.utc
+            request_deadline, time(0, 0)
         ) < self.today_provider.today() + timedelta(days=self.min_days_to_process):
             raise ClientRequestValidationException(
                 f"Request deadline too soon. Should be at least {self.min_days_to_process} from today"

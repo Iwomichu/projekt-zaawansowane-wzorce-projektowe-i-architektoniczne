@@ -44,6 +44,7 @@ class CreateNewSupplyOfferWorkflow:
                     supplier_id=supplier_id,
                     load_time_window=time_window,
                     source_location=location,
+                    accepted=False,
                 )
             )
             session.commit()

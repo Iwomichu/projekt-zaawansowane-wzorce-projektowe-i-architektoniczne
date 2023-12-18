@@ -6,6 +6,7 @@ from zwpa.model import (
     Location,
     Product,
     Supply,
+    SupplyOffer,
     SupplyRequest,
     SupplyStatus,
     TimeWindow,
@@ -271,7 +272,7 @@ class Fixtures:
 
     @classmethod
     def new_today_provider(
-        cls, today: datetime = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        cls, today: datetime = datetime(2020, 1, 1)
     ) -> TodayProvider:
         class FakeTodayProvider:
             def today(self) -> datetime:
@@ -546,3 +547,41 @@ class Fixtures:
                 time_window_id=time_window_id,
             )
         )
+
+    @classmethod
+    def new_supply_offer(
+        cls,
+        session: Session,
+        price: Decimal = PRICE,
+        transport_deadline: date = TRANSPORT_DEADLINE,
+        accepted: bool = False,
+        id: int | None = None,
+        supplier_id: int | None = None,
+        supply_id: int | None = None,
+        load_time_window_id: int | None = None,
+        source_location_id: int | None = None,
+    ) -> SupplyOffer:
+        if supplier_id is None:
+            supplier_id = cls.new_user_with_roles(session, roles=[UserRole.SUPPLIER]).id
+
+        if supply_id is None:
+            supply_id = cls.new_supply(session).id
+
+        if load_time_window_id is None:
+            load_time_window_id = cls.new_time_window(session).id
+
+        if source_location_id is None:
+            source_location_id = cls.new_location(session).id
+
+        supply_offer = SupplyOffer(
+            id=id if id is not None else cls.next_id(),
+            price=price,
+            transport_deadline=transport_deadline,
+            supply_id=supply_id,
+            supplier_id=supplier_id,
+            load_time_window_id=load_time_window_id,
+            source_location_id=source_location_id,
+            accepted=accepted,
+        )
+        session.add(supply_offer)
+        return supply_offer
