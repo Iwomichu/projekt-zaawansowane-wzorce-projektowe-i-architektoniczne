@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
@@ -11,9 +12,13 @@ class ProductView:
     id: int
     label: str
 
+    @staticmethod
+    def from_product(product: Product) -> ProductView:
+        return ProductView(id=product.id, label=product.label)
+
 
 class HandleClientRequestFormWorkflow:
-    def __init__(self, session_maker: sessionmaker) -> None:
+    def __init__(self, session_maker: sessionmaker[Session]) -> None:
         self.session_maker = session_maker
         self.user_role_checker = UserRoleChecker(session_maker)
 

@@ -21,6 +21,8 @@ from zwpa.workflows.client_requests.HandleClientRequestAcceptanceFormWorkflow im
     TimeWindowView,
     WarehouseView,
 )
+from zwpa.workflows.client_requests.HandleClientRequestFormWorkflow import ProductView
+from zwpa.workflows.supplies.HandleSupplyRequestFormWorkflow import SupplyRequestFormData
 from zwpa.workflows.transport.ListTransportRequestsWorkflow import TransportRequestView
 from zwpa.workflows.user.ListUserRolesWorkflow import UserRolesView
 
@@ -118,6 +120,10 @@ class Fixtures:
         )
         session.add(product)
         return product
+    
+    @classmethod
+    def new_product_view(cls, id: int, label: str = PRODUCT_LABEL, unit: str = PRODUCT_UNIT) -> ProductView:
+        return ProductView(id=id, label=label)
 
     @classmethod
     def new_time_window(
@@ -397,4 +403,11 @@ class Fixtures:
         warehouse = cls.new_warehouse_view(warehouse_id, time_window_id=time_window_id)
         return ClientRequestAcceptanceFormData(
             client_request=client_request, warehouses=[warehouse]
+        )
+    
+    @classmethod
+    def new_supply_request_form_data(cls, warehouse_id: int, time_window_id: int, product_ids: list[int]) -> SupplyRequestFormData:
+        return SupplyRequestFormData(
+            warehouses=[cls.new_warehouse_view(warehouse_id, time_window_id)],
+            products=[Fixtures.new_product_view(product_id) for product_id in product_ids]
         )

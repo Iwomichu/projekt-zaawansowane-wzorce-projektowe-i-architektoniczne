@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time
 import decimal
 from enum import Enum
 import re
@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     Date,
+    DateTime,
     Dialect,
     Float,
     ForeignKey,
@@ -230,3 +231,78 @@ class Warehouse(Base):
     location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
     location: Mapped["Location"] = relationship()
     load_time_windows: Mapped[list["TimeWindow"]] = relationship(secondary=warehouse_time_windows_associate_table)
+
+
+class SupplyStatus(str, Enum):
+    OFFERED = "OFFERED"
+    REQUESTED = "REQUESTED"
+    COMPLETE = "COMPLETE"
+
+
+SupplyStatusType: pgEnum = pgEnum(
+    SupplyStatus,
+    name="supply_status",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+class Supply(Base):
+    __tablename__ = "supplies"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    unit_count: Mapped[int] = mapped_column(Integer)
+    status = mapped_column(SupplyStatusType)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
+    
+    product: Mapped["Product"] = relationship(foreign_keys=[product_id])
+
+
+class SupplyReceipt(Base):
+    __tablename__ = "supply_receipts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    offer_acceptance_datetime: Mapped[datetime] = mapped_column(DateTime)
+    request_id: Mapped[int] = mapped_column(ForeignKey("supply_requests.id"), index=True)
+    offer_id: Mapped[int] = mapped_column(ForeignKey("supply_offers.id"), index=True)
+    clerk_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+
+    request: Mapped["SupplyRequest"] = relationship(foreign_keys=[request_id])
+    offer: Mapped["SupplyOffer"] = relationship(foreign_keys=[offer_id])
+    clerk: Mapped["User"] = relationship(foreign_keys=[clerk_id])
+
+
+class SupplyRequest(Base):
+    __tablename__ = "supply_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    request_deadline: Mapped[date] = mapped_column(Date)
+
+    supply_id: Mapped[int] = mapped_column(ForeignKey("supplies.id"), index=True)
+    clerk_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    warehouse_id: Mapped[int] = mapped_column(ForeignKey("warehouses.id"), index=True)
+
+    clerk: Mapped["User"] = relationship(foreign_keys=[clerk_id])
+    supply: Mapped["Supply"] = relationship(foreign_keys=[supply_id])
+    warehouse: Mapped["Warehouse"] = relationship(foreign_keys=[warehouse_id])
+
+
+
+class SupplyOffer(Base):
+    __tablename__ = "supply_offers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    price: Mapped[decimal.Decimal] = mapped_column(NumericMoney)
+    transport_deadline: Mapped[date] = mapped_column(Date)
+
+    supply_id: Mapped[int] = mapped_column(ForeignKey("supplies.id"), index=True)
+    supplier_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    load_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
+    source_id: Mapped[int] = mapped_column(ForeignKey("locations.id"), index=True)
+
+    supply: Mapped["Supply"] = relationship(foreign_keys=[supply_id])
+    supplier: Mapped["User"] = relationship(foreign_keys=[supplier_id])
+    source: Mapped["Location"] = relationship(foreign_keys=[source_id])
+    load_time_window: Mapped["TimeWindow"] = relationship(
+        foreign_keys=[load_time_window_id]
+    )
