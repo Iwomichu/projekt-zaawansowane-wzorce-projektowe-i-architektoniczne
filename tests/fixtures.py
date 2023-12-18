@@ -5,6 +5,9 @@ from zwpa.model import (
     ClientRequest,
     Location,
     Product,
+    Supply,
+    SupplyRequest,
+    SupplyStatus,
     TimeWindow,
     Transport,
     TransportRequest,
@@ -14,6 +17,8 @@ from zwpa.model import (
 from zwpa.model import UserRoleAssignment
 
 from zwpa.model import User
+from zwpa.views.SupplyRequestView import SupplyRequestView
+from zwpa.views.SupplyView import SupplyView
 from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import TodayProvider
 from zwpa.workflows.client_requests.GetClientRequestsWorkflow import ClientRequestView
 from zwpa.workflows.client_requests.HandleClientRequestAcceptanceFormWorkflow import (
@@ -22,7 +27,12 @@ from zwpa.workflows.client_requests.HandleClientRequestAcceptanceFormWorkflow im
     WarehouseView,
 )
 from zwpa.workflows.client_requests.HandleClientRequestFormWorkflow import ProductView
-from zwpa.workflows.supplies.HandleSupplyRequestFormWorkflow import SupplyRequestFormData
+from zwpa.workflows.supplies.HandleSupplyOfferFormWorkflow import (
+    SupplyOfferFormInitData,
+)
+from zwpa.workflows.supplies.HandleSupplyRequestFormWorkflow import (
+    SupplyRequestFormData,
+)
 from zwpa.workflows.transport.ListTransportRequestsWorkflow import TransportRequestView
 from zwpa.workflows.user.ListUserRolesWorkflow import UserRolesView
 
@@ -120,9 +130,11 @@ class Fixtures:
         )
         session.add(product)
         return product
-    
+
     @classmethod
-    def new_product_view(cls, id: int, label: str = PRODUCT_LABEL, unit: str = PRODUCT_UNIT) -> ProductView:
+    def new_product_view(
+        cls, id: int, label: str = PRODUCT_LABEL, unit: str = PRODUCT_UNIT
+    ) -> ProductView:
         return ProductView(id=id, label=label)
 
     @classmethod
@@ -404,10 +416,133 @@ class Fixtures:
         return ClientRequestAcceptanceFormData(
             client_request=client_request, warehouses=[warehouse]
         )
-    
+
     @classmethod
-    def new_supply_request_form_data(cls, warehouse_id: int, time_window_id: int, product_ids: list[int]) -> SupplyRequestFormData:
+    def new_supply(
+        cls,
+        session: Session,
+        unit_count: int = UNIT_COUNT,
+        status: SupplyStatus = SupplyStatus.REQUESTED,
+        id: int | None = None,
+        product_id: int | None = None,
+        warehouse_id: int | None = None,
+        supply_time_window_id: int | None = None,
+    ) -> Supply:
+        if product_id is None:
+            product_id = cls.next_id()
+            cls.new_product(session, id=product_id)
+
+        if supply_time_window_id is None:
+            supply_time_window_id = cls.next_id()
+            cls.new_time_window(session, id=supply_time_window_id)
+
+        if warehouse_id is None:
+            warehouse_id = cls.next_id()
+            cls.new_warehouse(
+                session, id=warehouse_id, load_time_window_id=supply_time_window_id
+            )
+
+        supply = Supply(
+            unit_count=unit_count,
+            status=status,
+            id=id if id is not None else cls.next_id(),
+            product_id=product_id,
+            warehouse_id=warehouse_id,
+            supply_time_window_id=supply_time_window_id,
+        )
+        session.add(supply)
+        return supply
+
+    @classmethod
+    def new_supply_view(
+        cls,
+        supply_id: int,
+        product_id: int,
+        warehouse_id: int,
+        time_window_id: int,
+        status: SupplyStatus = SupplyStatus.REQUESTED,
+        unit_count: int = UNIT_COUNT,
+    ) -> SupplyView:
+        return SupplyView(
+            id=supply_id,
+            status=status,
+            unit_count=unit_count,
+            product=cls.new_product_view(product_id),
+            warehouse=cls.new_warehouse_view(warehouse_id, time_window_id),
+        )
+
+    @classmethod
+    def new_supply_request_view(
+        cls,
+        supply_request_id: int,
+        supply_id: int,
+        product_id: int,
+        warehouse_id: int,
+        time_window_id: int,
+        request_deadline: date = REQUEST_DEADLINE,
+    ) -> SupplyRequestView:
+        return SupplyRequestView(
+            id=supply_request_id,
+            supply=cls.new_supply_view(
+                supply_id=supply_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                time_window_id=time_window_id,
+            ),
+            request_deadline=request_deadline,
+        )
+
+    @classmethod
+    def new_supply_request(
+        cls,
+        session: Session,
+        request_deadline: date = REQUEST_DEADLINE,
+        id: int | None = None,
+        supply_id: int | None = None,
+        clerk_id: int | None = None,
+    ) -> SupplyRequest:
+        if supply_id is None:
+            supply_id = cls.next_id()
+            cls.new_supply(session, id=supply_id)
+        if clerk_id is None:
+            clerk_id = cls.next_id()
+            cls.new_user_with_roles(session, id=clerk_id, roles=[UserRole.CLERK])
+
+        supply_request = SupplyRequest(
+            request_deadline=request_deadline,
+            id=id if id is not None else cls.next_id(),
+            supply_id=supply_id,
+            clerk_id=clerk_id,
+        )
+        session.add(supply_request)
+        return supply_request
+
+    @classmethod
+    def new_supply_request_form_data(
+        cls, warehouse_id: int, time_window_id: int, product_ids: list[int]
+    ) -> SupplyRequestFormData:
         return SupplyRequestFormData(
             warehouses=[cls.new_warehouse_view(warehouse_id, time_window_id)],
-            products=[Fixtures.new_product_view(product_id) for product_id in product_ids]
+            products=[
+                Fixtures.new_product_view(product_id) for product_id in product_ids
+            ],
+        )
+
+    @classmethod
+    def new_supply_offer_form_data(
+        cls,
+        supply_request_id: int,
+        supply_id: int,
+        warehouse_id: int,
+        time_window_id: int,
+        product_id: int,
+    ) -> SupplyOfferFormInitData:
+        return SupplyOfferFormInitData(
+            supply_request=Fixtures.new_supply_request_view(
+                supply_request_id=supply_request_id,
+                supply_id=supply_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                time_window_id=time_window_id,
+            )
         )
