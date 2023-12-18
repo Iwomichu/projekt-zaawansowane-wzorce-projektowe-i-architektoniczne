@@ -300,11 +300,11 @@ class SupplyOffer(Base):
     supply_id: Mapped[int] = mapped_column(ForeignKey("supplies.id"), index=True)
     supplier_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     load_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"))
-    source_id: Mapped[int] = mapped_column(ForeignKey("locations.id"), index=True)
+    source_location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"), index=True)
 
     supply: Mapped["Supply"] = relationship(foreign_keys=[supply_id])
     supplier: Mapped["User"] = relationship(foreign_keys=[supplier_id])
-    source: Mapped["Location"] = relationship(foreign_keys=[source_id])
+    source_location: Mapped["Location"] = relationship(foreign_keys=[source_location_id])
     load_time_window: Mapped["TimeWindow"] = relationship(
         foreign_keys=[load_time_window_id]
     )

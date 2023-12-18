@@ -1,6 +1,11 @@
+from datetime import date, time
+from decimal import Decimal
 from tests.fixtures import Fixtures, REQUEST_DEADLINE, UNIT_COUNT
 from tests.test_case_with_database import TestCaseWithDatabase
-from zwpa.model import SupplyRequest, SupplyStatus, UserRole
+from zwpa.model import SupplyOffer, SupplyRequest, SupplyStatus, UserRole
+from zwpa.workflows.supplies.CreateNewSupplyOfferWorkflow import (
+    CreateNewSupplyOfferWorkflow,
+)
 from zwpa.workflows.supplies.CreateNewSupplyRequestWorkflow import (
     CreateNewSupplyRequestWorkflow,
 )
@@ -70,7 +75,9 @@ class SupplyTestCase(TestCaseWithDatabase):
         # given
         workflow = HandleSupplyOfferFormWorkflow(self.session_maker)
         with self.session_maker() as session:
-            supplier_id = Fixtures.new_user_with_roles(session, roles=[UserRole.SUPPLIER]).id
+            supplier_id = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.SUPPLIER]
+            ).id
             supply_request = Fixtures.new_supply_request(session)
             session.commit()
             supply_request_id = supply_request.id
@@ -87,13 +94,52 @@ class SupplyTestCase(TestCaseWithDatabase):
             time_window_id=time_window_id,
             product_id=product_id,
         )
-        result = workflow.get_form_data(supplier_id, supply_request_id=supply_request_id)
-        
+        result = workflow.get_form_data(
+            supplier_id, supply_request_id=supply_request_id
+        )
+
         # then
         self.assertEqual(expected, result)
 
-    def test_supplier_can_create_supply_offer(self):
-        pass
+    def test_supplier_can_create_supply_offer_for_supply_request(self):
+        # given
+        workflow = CreateNewSupplyOfferWorkflow(self.session_maker)
+        price = Decimal(2.0)
+        source_longitude = 7.0
+        source_latitude = 6.0
+        source_load_window_start = time(3, 0)
+        source_load_window_end = time(6, 0)
+        transport_deadline = date(2025, 6, 1)
+        with self.session_maker() as session:
+            supplier_id = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.SUPPLIER]
+            ).id
+            supply_request = Fixtures.new_supply_request(session)
+            supply_request_id = supply_request.id
+            supply_id = supply_request.supply_id
+            session.commit()
+        # when
+        workflow.create_new_supply_offer_for_request(
+            price=price,
+            transport_deadline=transport_deadline,
+            supply_request_id=supply_request_id,
+            supplier_id=supplier_id,
+            load_time_window_start=source_load_window_start,
+            load_time_window_end=source_load_window_end,
+            source_longitude=source_longitude,
+            source_latitude=source_latitude,
+        )
+        # then
+        with self.session_maker() as session:
+            supply_offer = session.query(SupplyOffer).one()
+            self.assertEqual(price, supply_offer.price)
+            self.assertEqual(source_longitude, supply_offer.source_location.longitude)
+            self.assertEqual(source_latitude, supply_offer.source_location.latitude)
+            self.assertEqual(source_load_window_start, supply_offer.load_time_window.start)
+            self.assertEqual(source_load_window_end, supply_offer.load_time_window.end)
+            self.assertEqual(transport_deadline, supply_offer.transport_deadline)
+            self.assertEqual(supplier_id, supply_offer.supplier_id)
+            self.assertEqual(supply_id, supply_offer.supply_id)
 
     def test_clerk_can_access_supply_request_acceptation_data(self):
         pass
