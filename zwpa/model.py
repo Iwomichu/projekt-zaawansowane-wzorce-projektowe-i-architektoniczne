@@ -254,8 +254,12 @@ class Supply(Base):
     unit_count: Mapped[int] = mapped_column(Integer)
     status = mapped_column(SupplyStatusType)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
+    warehouse_id: Mapped[int] = mapped_column(ForeignKey("warehouses.id"), index=True)
+    supply_time_window_id: Mapped[int] = mapped_column(ForeignKey("time_windows.id"), index=True)
     
     product: Mapped["Product"] = relationship(foreign_keys=[product_id])
+    warehouse: Mapped["Warehouse"] = relationship(foreign_keys=[warehouse_id])
+    supply_time_window: Mapped["TimeWindow"] = relationship(foreign_keys=[supply_time_window_id])
 
 
 class SupplyReceipt(Base):
@@ -280,11 +284,9 @@ class SupplyRequest(Base):
 
     supply_id: Mapped[int] = mapped_column(ForeignKey("supplies.id"), index=True)
     clerk_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-    warehouse_id: Mapped[int] = mapped_column(ForeignKey("warehouses.id"), index=True)
 
     clerk: Mapped["User"] = relationship(foreign_keys=[clerk_id])
     supply: Mapped["Supply"] = relationship(foreign_keys=[supply_id])
-    warehouse: Mapped["Warehouse"] = relationship(foreign_keys=[warehouse_id])
 
 
 
