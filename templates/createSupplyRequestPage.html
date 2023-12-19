@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block head %}
+{% endblock %}
+{% block content %}
+<h1>Create client request</h1>
+<form action="/supply/request/create" method="post">
+    <div>
+        <label for="unit_count">Unit count</label>
+        <input type="number" name="unit_count" id="unit_count">
+    </div>
+
+    <div>
+        <label for="request_deadline">Request acceptance deadline</label>
+        <input type="date" name="request_deadline" id="request_deadline">
+    </div>
+
+    <fieldset>
+        <legend>Select the product you want to request:</legend>
+        {% for product in data.products %}
+        <label for="product">{{ product.label }}</label>
+        <input type="radio" name="product_id" id="product" value="{{ product.id }}">
+        {% endfor %}
+    </fieldset>
+
+    {% for warehouse in data.warehouses %}
+    <fieldset>
+        <legend>Select warehouse</legend>
+        <label for="warehouse_id">{{warehouse.label}}</label>
+        <input type="radio" name="warehouse_id" id="warehouse_id" value="{{ warehouse.id }}">
+        {% for time_window in warehouse.load_time_windows %}
+        <fieldset>
+            <input type="radio" name="time_window_id" id="time_window_id" value="{{ time_window.id }}">
+            <label for="time_window_id">{{ time_window.start}} - {{time_window.end}}</label>
+        </fieldset>
+        {% endfor %}
+    </fieldset>
+    {% endfor %}
+    <input type="submit" value="Create">
+</form>
+{% endblock %}

@@ -90,6 +90,9 @@ class SupplyTestCase(TestCaseWithDatabase):
             self.assertEqual(UNIT_COUNT, supply_request.supply.unit_count)
             self.assertEqual(SupplyStatus.REQUESTED, supply_request.supply.status)
 
+    def test_supplier_can_list_supply_requests(self):
+        self.assertTrue(False)
+
     def test_supplier_can_access_supply_offer_creation_data(self):
         # given
         workflow = HandleSupplyOfferFormWorkflow(self.session_maker)
@@ -163,6 +166,9 @@ class SupplyTestCase(TestCaseWithDatabase):
             self.assertEqual(supply_id, supply_offer.supply_id)
             self.assertFalse(supply_offer.accepted)
 
+    def test_clerk_can_list_supply_offers_for_request(self):
+        self.assertTrue(False)
+
 
 class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
     def _clerk_tries_to_accept_supply_offer(self):
@@ -170,14 +176,19 @@ class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
         self.today_datetime = datetime(2020, 1, 1)
         self.transport_request_deadline = TRANSPORT_DEADLINE
         self.workflow = AcceptRequestedSupplyOfferWorkflow(
-            self.session_maker, today_provider=Fixtures.new_today_provider(self.today_datetime)
+            self.session_maker,
+            today_provider=Fixtures.new_today_provider(self.today_datetime),
         )
         with self.session_maker() as session:
-            self.clerk_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
+            self.clerk_id = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.CLERK]
+            ).id
             self.supply_request = Fixtures.new_supply_request(session)
             self.supply_request_id = self.supply_request.id
             self.supply_id = self.supply_request.supply_id
-            self.supply_offer_id = Fixtures.new_supply_offer(session, supply_id=self.supply_id).id
+            self.supply_offer_id = Fixtures.new_supply_offer(
+                session, supply_id=self.supply_id
+            ).id
             session.commit()
 
         # when
@@ -187,7 +198,6 @@ class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
             transport_price=self.price,
             transport_request_deadline=self.transport_request_deadline,
         )
-
 
     def test_clerk_can_accept_supply_offer(self):
         # given
@@ -202,7 +212,6 @@ class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
             )
             self.assertTrue(supply_offer.accepted)
             self.assertEqual(SupplyStatus.OFFER_ACCEPTED, supply_offer.supply.status)
-
 
     @skip("Currently no info is displayed in acceptation form page")
     def test_clerk_can_access_supply_offer_acceptation_data(self):

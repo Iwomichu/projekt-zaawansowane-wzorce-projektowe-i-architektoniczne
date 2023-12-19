@@ -20,6 +20,7 @@ from .routers.user import (
     modify_user_roles_workflow,
 )
 from .routers.client_requests import router as client_requests_router
+from .routers.supply import router as supply_router
 
 
 create_root_workflow = CreateRootWorkflow(
@@ -42,6 +43,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(user_router)
 app.include_router(client_requests_router)
+app.include_router(supply_router)
 
 
 @app.get("/", response_class=HTMLResponse)
