@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Supply requests{% endblock %}
+{% block head %}
+{% endblock %}
+{% block content %}
+
+<h1>List of supply requests</h1>
+<table>
+    <tr>
+        <th>Id</th>
+        <th>Product name</th>
+        <th>Unit count</th>
+        <th>Request deadline</th>
+        {% if is_supplier %} <th>Action</th> {% endif %}
+    </tr>
+    {% for supply_request in supply_requests %}
+    <tr>
+        <td>{{supply_request.id}}</td>
+        <td>{{supply_request.supply.product.label}}</td>
+        <td>{{supply_request.supply.unit_count}}</td>
+        <td>{{supply_request.request_deadline}}</td>
+        <td>
+            {% if is_supplier %}
+            <a href="/supply/request/offer?supply_request_id={{supply_request.id}}">Make offer</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

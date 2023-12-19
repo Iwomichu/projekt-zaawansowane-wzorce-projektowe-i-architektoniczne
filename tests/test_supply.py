@@ -34,6 +34,9 @@ from zwpa.workflows.supplies.HandleSupplyOfferFormWorkflow import (
 from zwpa.workflows.supplies.HandleSupplyRequestFormWorkflow import (
     HandleSupplyRequestFormWorkflow,
 )
+from zwpa.workflows.supplies.ListSupplyRequestsWorkflow import (
+    ListSupplyRequestsWorkflow,
+)
 
 
 class SupplyTestCase(TestCaseWithDatabase):
@@ -90,8 +93,53 @@ class SupplyTestCase(TestCaseWithDatabase):
             self.assertEqual(UNIT_COUNT, supply_request.supply.unit_count)
             self.assertEqual(SupplyStatus.REQUESTED, supply_request.supply.status)
 
+    def test_clerk_can_list_supply_requests(self):
+        # given
+        workflow = ListSupplyRequestsWorkflow(self.session_maker)
+        with self.session_maker() as session:
+            user_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
+            supply_request = Fixtures.new_supply_request(session)
+            session.commit()
+
+            expected = [
+                Fixtures.new_supply_request_view(
+                    supply_request_id=supply_request.id,
+                    supply_id=supply_request.supply_id,
+                    product_id=supply_request.supply.product_id,
+                    warehouse_id=supply_request.supply.warehouse_id,
+                    time_window_id=supply_request.supply.supply_time_window_id,
+                )
+            ]
+
+        # when
+        result = workflow.list_supply_requests(user_id)
+
+        # then
+        self.assertCountEqual(expected, result)
+
     def test_supplier_can_list_supply_requests(self):
-        self.assertTrue(False)
+        # given
+        workflow = ListSupplyRequestsWorkflow(self.session_maker)
+        with self.session_maker() as session:
+            user_id = Fixtures.new_user_with_roles(session, roles=[UserRole.SUPPLIER]).id
+            supply_request = Fixtures.new_supply_request(session)
+            session.commit()
+
+            expected = [
+                Fixtures.new_supply_request_view(
+                    supply_request_id=supply_request.id,
+                    supply_id=supply_request.supply_id,
+                    product_id=supply_request.supply.product_id,
+                    warehouse_id=supply_request.supply.warehouse_id,
+                    time_window_id=supply_request.supply.supply_time_window_id,
+                )
+            ]
+
+        # when
+        result = workflow.list_supply_requests(user_id)
+
+        # then
+        self.assertCountEqual(expected, result)
 
     def test_supplier_can_access_supply_offer_creation_data(self):
         # given
