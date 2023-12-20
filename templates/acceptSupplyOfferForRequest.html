@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Edit user roles{% endblock %}
+{% block head %}
+{% endblock %}
+{% block content %}
+<h1>Accept supply offer</h1>
+<hr>
+<form action="/supply/request/{{supply_request_id}}/offer/{{supply_offer_id}}/accept"
+    method="post">
+    <label for="transport_request_deadline">Transport request deadline</label>
+    <input type="date" name="transport_request_deadline" id="transport_request_deadline">
+    <label for="price_for_transport">Price for transport</label>
+    <input type="number" name="price_for_transport" id="price_for_transport">
+    <input type="submit" value="Save">
+</form>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Supply requests{% endblock %}
+{% block head %}
+{% endblock %}
+{% block content %}
+
+<h1>List of supply requests</h1>
+<table>
+    <tr>
+        <th>Id</th>
+        <th>Price</th>
+        <th>Transport deadline</th>
+        <th>Source longitude</th>
+        <th>Source latitude</th>
+        <th>Load time window start</th>
+        <th>Load time window end</th>
+        <th>Accept</th>
+    </tr>
+    {% for supply_offer in supply_offers %}
+    <tr>
+        <td>{{supply_offer.id}}</td>
+        <td>{{supply_offer.price}}</td>
+        <td>{{supply_offer.transport_deadline}}</td>
+        <td>{{supply_offer.source_location.longitude}}</td>
+        <td>{{supply_offer.source_location.latitude}}</td>
+        <td>{{supply_offer.load_time_window.start}}</td>
+        <td>{{supply_offer.load_time_window.end}}</td>
+        <td><a href="/supply/request/{{supply_request_id}}/offer/{{supply_offer.id}}/accept">Accept</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

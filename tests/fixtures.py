@@ -18,6 +18,8 @@ from zwpa.model import (
 from zwpa.model import UserRoleAssignment
 
 from zwpa.model import User
+from zwpa.views.LocationView import LocationView
+from zwpa.views.SupplyOfferView import SupplyOfferView
 from zwpa.views.SupplyRequestView import SupplyRequestView
 from zwpa.views.SupplyView import SupplyView
 from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import TodayProvider
@@ -167,6 +169,10 @@ class Fixtures:
         )
         session.add(location)
         return location
+    
+    @classmethod
+    def new_location_view(cls, location_id: int) -> LocationView:
+        return LocationView(id=location_id, longitude=LONGITUDE, latitude=LATITUDE)
 
     @classmethod
     def new_client_request(
@@ -585,3 +591,25 @@ class Fixtures:
         )
         session.add(supply_offer)
         return supply_offer
+
+    @classmethod
+    def new_supply_offer_view(
+        cls,
+        supply_offer_id: int,
+        supply_id: int,
+        load_time_window_id: int,
+        source_location_id: int,
+        product_id: int,
+        warehouse_id: int,
+        destination_window_id: int,
+    ) -> SupplyOfferView:
+        return SupplyOfferView(
+            accepted=False,
+            price=PRICE,
+            transport_deadline=TRANSPORT_DEADLINE,
+            id=supply_offer_id,
+            supply=cls.new_supply_view(supply_id, product_id=product_id, warehouse_id=warehouse_id, time_window_id=destination_window_id),
+            load_time_window=cls.new_time_window_view(load_time_window_id),
+            supplier_login=LOGIN,
+            source_location=cls.new_location_view(source_location_id),
+        )

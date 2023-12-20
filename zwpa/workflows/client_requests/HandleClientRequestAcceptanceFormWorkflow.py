@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import time
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, Session
-from zwpa.model import ClientRequest, UserRole, Warehouse
+from zwpa.model import ClientRequest, TimeWindow, UserRole, Warehouse
 from zwpa.workflows.client_requests.GetClientRequestsWorkflow import ClientRequestView
 
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
@@ -15,6 +15,12 @@ class TimeWindowView:
     id: int
     start: time
     end: time
+
+    @staticmethod
+    def from_time_window(time_window: TimeWindow) -> TimeWindowView:
+        return TimeWindowView(
+            id=time_window.id, start=time_window.start, end=time_window.end
+        )
 
 
 @dataclass(eq=True)
@@ -29,7 +35,9 @@ class WarehouseView:
             id=warehouse.id,
             label=warehouse.label,
             load_time_windows=[
-                TimeWindowView(id=time_window.id, start=time_window.start, end=time_window.end)
+                TimeWindowView(
+                    id=time_window.id, start=time_window.start, end=time_window.end
+                )
                 for time_window in warehouse.load_time_windows
             ],
         )

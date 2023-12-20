@@ -11,7 +11,7 @@
         <th>Product name</th>
         <th>Unit count</th>
         <th>Request deadline</th>
-        {% if is_supplier %} <th>Action</th> {% endif %}
+        <th>Action</th>
     </tr>
     {% for supply_request in supply_requests %}
     <tr>
@@ -21,7 +21,10 @@
         <td>{{supply_request.request_deadline}}</td>
         <td>
             {% if is_supplier %}
-            <a href="/supply/request/offer/create?supply_request_id={{supply_request.id}}">Make offer</a>
+            <a href="/supply/request/{{supply_request.id}}/offer/create">Make offer</a>
+            {% endif %}
+            {% if is_clerk %}
+            <a href="/supply/request/{{supply_request.id}}/offers">List offers</a>
             {% endif %}
         </td>
     </tr>

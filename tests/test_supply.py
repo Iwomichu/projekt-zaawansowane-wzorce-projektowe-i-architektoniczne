@@ -19,7 +19,8 @@ from zwpa.model import (
     TransportRequest,
     UserRole,
 )
-from zwpa.workflows.supplies.AcceptSupplyOfferWorkflow import (
+from zwpa.views.SupplyOfferView import SupplyOfferView
+from zwpa.workflows.supplies.AcceptRequestedSupplyOfferWorkflow import (
     AcceptRequestedSupplyOfferWorkflow,
 )
 from zwpa.workflows.supplies.CreateNewSupplyOfferWorkflow import (
@@ -34,6 +35,7 @@ from zwpa.workflows.supplies.HandleSupplyOfferFormWorkflow import (
 from zwpa.workflows.supplies.HandleSupplyRequestFormWorkflow import (
     HandleSupplyRequestFormWorkflow,
 )
+from zwpa.workflows.supplies.ListSupplyOffersForRequestWorkflow import ListSupplyOffersForRequestWorkflow
 from zwpa.workflows.supplies.ListSupplyRequestsWorkflow import (
     ListSupplyRequestsWorkflow,
 )
@@ -215,7 +217,21 @@ class SupplyTestCase(TestCaseWithDatabase):
             self.assertFalse(supply_offer.accepted)
 
     def test_clerk_can_list_supply_offers_for_request(self):
-        self.assertTrue(False)
+        # given
+        workflow = ListSupplyOffersForRequestWorkflow(self.session_maker)
+        with self.session_maker() as session:
+            clerk_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
+            supply_request = Fixtures.new_supply_request(session)
+            supply_offer = Fixtures.new_supply_offer(session, supply_id=supply_request.supply_id)
+            supply_request_id = supply_request.id
+            session.commit()
+            expected = [SupplyOfferView.from_supply_offer(supply_offer)]
+        
+        # when
+        result = workflow.list_supply_offers_for_request(user_id=clerk_id, supply_request_id=supply_request_id)
+
+        # then
+        self.assertCountEqual(expected, result)
 
 
 class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
