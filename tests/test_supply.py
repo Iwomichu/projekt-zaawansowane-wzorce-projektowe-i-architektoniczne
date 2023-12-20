@@ -142,6 +142,9 @@ class SupplyTestCase(TestCaseWithDatabase):
 
         # then
         self.assertCountEqual(expected, result)
+        
+    def test_listing_of_supply_requests_does_not_include_already_fulfilled_supplies(self):
+        self.assertTrue(False)
 
     def test_supplier_can_access_supply_offer_creation_data(self):
         # given
@@ -262,6 +265,9 @@ class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
             transport_price=self.price,
             transport_request_deadline=self.transport_request_deadline,
         )
+
+    def test_clerk_cannot_accept_supply_offer_for_already_fulfilled_supply(self):
+        self.assertTrue(False)
 
     def test_clerk_can_accept_supply_offer(self):
         # given
