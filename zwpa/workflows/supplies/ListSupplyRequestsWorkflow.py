@@ -1,5 +1,5 @@
 from sqlalchemy.orm import sessionmaker, Session
-from zwpa.model import SupplyRequest, UserRole
+from zwpa.model import SupplyRequest, SupplyStatus, UserRole
 from zwpa.views.SupplyRequestView import SupplyRequestView
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
 
@@ -19,4 +19,5 @@ class ListSupplyRequestsWorkflow:
             return [
                 SupplyRequestView.from_supply_request(supply_request)
                 for supply_request in supply_requests
+                if supply_request.supply.status is SupplyStatus.REQUESTED
             ]

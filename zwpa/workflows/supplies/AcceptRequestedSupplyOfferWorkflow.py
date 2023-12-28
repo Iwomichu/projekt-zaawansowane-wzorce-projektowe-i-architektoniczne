@@ -18,6 +18,12 @@ from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
 
 
+class AlreadyAcceptedSupplyOfferAcceptAttemptException(Exception):
+    def __init__(self, supply_offer_id: int, *args: object) -> None:
+        super().__init__(*args)
+        self.supply_request_id = supply_offer_id
+
+
 class AcceptRequestedSupplyOfferWorkflow:
     def __init__(
         self,
@@ -42,6 +48,11 @@ class AcceptRequestedSupplyOfferWorkflow:
                 .where(SupplyOffer.id == supply_offer_id)
                 .one()
             )
+            if supply_offer.supply.status not in (
+                SupplyStatus.REQUESTED,
+                SupplyStatus.OFFERED_WITHOUT_REQUEST,
+            ):
+                raise AlreadyAcceptedSupplyOfferAcceptAttemptException(supply_offer_id)
             self._update_supply_offer(supply_offer)
             self._create_transport_entities(
                 session, supply_offer, transport_price, transport_request_deadline

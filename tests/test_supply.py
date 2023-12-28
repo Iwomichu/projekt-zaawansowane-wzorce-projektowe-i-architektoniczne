@@ -22,6 +22,7 @@ from zwpa.model import (
 from zwpa.views.SupplyOfferView import SupplyOfferView
 from zwpa.workflows.supplies.AcceptRequestedSupplyOfferWorkflow import (
     AcceptRequestedSupplyOfferWorkflow,
+    AlreadyAcceptedSupplyOfferAcceptAttemptException,
 )
 from zwpa.workflows.supplies.CreateNewSupplyOfferWorkflow import (
     CreateNewSupplyOfferWorkflow,
@@ -35,7 +36,9 @@ from zwpa.workflows.supplies.HandleSupplyOfferFormWorkflow import (
 from zwpa.workflows.supplies.HandleSupplyRequestFormWorkflow import (
     HandleSupplyRequestFormWorkflow,
 )
-from zwpa.workflows.supplies.ListSupplyOffersForRequestWorkflow import ListSupplyOffersForRequestWorkflow
+from zwpa.workflows.supplies.ListSupplyOffersForRequestWorkflow import (
+    ListSupplyOffersForRequestWorkflow,
+)
 from zwpa.workflows.supplies.ListSupplyRequestsWorkflow import (
     ListSupplyRequestsWorkflow,
 )
@@ -123,7 +126,9 @@ class SupplyTestCase(TestCaseWithDatabase):
         # given
         workflow = ListSupplyRequestsWorkflow(self.session_maker)
         with self.session_maker() as session:
-            user_id = Fixtures.new_user_with_roles(session, roles=[UserRole.SUPPLIER]).id
+            user_id = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.SUPPLIER]
+            ).id
             supply_request = Fixtures.new_supply_request(session)
             session.commit()
 
@@ -142,9 +147,38 @@ class SupplyTestCase(TestCaseWithDatabase):
 
         # then
         self.assertCountEqual(expected, result)
-        
-    def test_listing_of_supply_requests_does_not_include_already_fulfilled_supplies(self):
-        self.assertTrue(False)
+
+    def test_listing_of_supply_requests_includes_only_requested_supplies(self):
+        # given
+        workflow = ListSupplyRequestsWorkflow(self.session_maker)
+        with self.session_maker() as session:
+            user_id = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.SUPPLIER]
+            ).id
+            supply_accepted = Fixtures.new_supply(
+                session, status=SupplyStatus.OFFER_ACCEPTED
+            )
+            Fixtures.new_supply_request(session, supply_id=supply_accepted.id)
+            supply_complete = Fixtures.new_supply(session, status=SupplyStatus.COMPLETE)
+            Fixtures.new_supply_request(session, supply_id=supply_complete.id)
+            supply_request = Fixtures.new_supply_request(session)
+            session.commit()
+
+            expected = [
+                Fixtures.new_supply_request_view(
+                    supply_request_id=supply_request.id,
+                    supply_id=supply_request.supply_id,
+                    product_id=supply_request.supply.product_id,
+                    warehouse_id=supply_request.supply.warehouse_id,
+                    time_window_id=supply_request.supply.supply_time_window_id,
+                )
+            ]
+
+        # when
+        result = workflow.list_supply_requests(user_id)
+
+        # then
+        self.assertCountEqual(expected, result)
 
     def test_supplier_can_access_supply_offer_creation_data(self):
         # given
@@ -225,13 +259,17 @@ class SupplyTestCase(TestCaseWithDatabase):
         with self.session_maker() as session:
             clerk_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
             supply_request = Fixtures.new_supply_request(session)
-            supply_offer = Fixtures.new_supply_offer(session, supply_id=supply_request.supply_id)
+            supply_offer = Fixtures.new_supply_offer(
+                session, supply_id=supply_request.supply_id
+            )
             supply_request_id = supply_request.id
             session.commit()
             expected = [SupplyOfferView.from_supply_offer(supply_offer)]
-        
+
         # when
-        result = workflow.list_supply_offers_for_request(user_id=clerk_id, supply_request_id=supply_request_id)
+        result = workflow.list_supply_offers_for_request(
+            user_id=clerk_id, supply_request_id=supply_request_id
+        )
 
         # then
         self.assertCountEqual(expected, result)
@@ -267,7 +305,15 @@ class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
         )
 
     def test_clerk_cannot_accept_supply_offer_for_already_fulfilled_supply(self):
-        self.assertTrue(False)
+        self._clerk_tries_to_accept_supply_offer()
+        self.assertRaises(
+            AlreadyAcceptedSupplyOfferAcceptAttemptException,
+            self.workflow.accept_supply_offer,
+            user_id=self.clerk_id,
+            supply_offer_id=self.supply_offer_id,
+            transport_price=self.price,
+            transport_request_deadline=self.transport_request_deadline,
+        )
 
     def test_clerk_can_accept_supply_offer(self):
         # given
