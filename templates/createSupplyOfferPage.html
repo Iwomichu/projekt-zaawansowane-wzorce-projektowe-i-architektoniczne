@@ -1,28 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Edit user roles{% endblock %}
-{% block head %}
-{% endblock %}
+{% block title %}Create supply offer{% endblock %}
 {% block content %}
 <h1>Create supply offer</h1>
-<form action="/supply/request/offer/create?supply_request_id={{supply_request_id}}" method="post">
-    <label for="price">Price</label>
-    <input type="number" name="price" id="price">
-    <label for="transport_deadline">Transport deadline</label>
-    <input type="date" name="transport_deadline" id="transport_deadline">
-    <div>
-        <h4>Load coordinates</h4>
-        <label for="source_longitude">Load longitude</label>
-        <input type="number" name="source_longitude" id="source_longitude">
-        <label for="source_latitude">Load latitude</label>
-        <input type="number" name="source_latitude" id="source_latitude">
+<div class="row">
+    <div class="col-4">
+        <form action="/supply/request/{{supply_request_id}}/offer/create" method="post">
+            <div class="row">
+                <label for="price">Price</label>
+                <input type="number" name="price" id="price">
+            </div>
+            <div class="row">
+                <label for="transport_deadline">Transport deadline</label>
+                <input type="date" name="transport_deadline" id="transport_deadline">
+            </div>
+            <div class="row">
+                <h3>Load coordinates</h3>
+                <label for="source_longitude">Load longitude</label>
+                <input type="number" name="source_longitude" id="source_longitude">
+                <label for="source_latitude">Load latitude</label>
+                <input type="number" name="source_latitude" id="source_latitude">
+            </div>
+            <div class="row">
+                <h3>Load time window</h3>
+                <label for="load_time_window_start">Start</label>
+                <input type="time" name="load_time_window_start" id="load_time_window_start">
+                <label for="load_time_window_end">End</label>
+                <input type="time" name="load_time_window_end" id="load_time_window_end">
+            </div>
+            <div class="row">
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
     </div>
-    <div>
-        <h4>Load time window</h4>
-        <label for="load_time_window_start">Start</label>
-        <input type="time" name="load_time_window_start" id="load_time_window_start">
-        <label for="load_time_window_end">End</label>
-        <input type="time" name="load_time_window_end" id="load_time_window_end">
-    </div>
-    <input type="submit" value="Save">
-</form>
+</div>
 {% endblock %}

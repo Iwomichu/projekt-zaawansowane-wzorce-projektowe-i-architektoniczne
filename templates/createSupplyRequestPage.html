@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 {% block title %}Create account{% endblock %}
-{% block head %}
-{% endblock %}
 {% block content %}
 <h1>Create client request</h1>
 <form action="/supply/request/create" method="post">
@@ -23,9 +21,9 @@
         {% endfor %}
     </fieldset>
 
-    {% for warehouse in data.warehouses %}
     <fieldset>
         <legend>Select warehouse</legend>
+        {% for warehouse in data.warehouses %}
         <label for="warehouse_id">{{warehouse.label}}</label>
         <input type="radio" name="warehouse_id" id="warehouse_id" value="{{ warehouse.id }}">
         {% for time_window in warehouse.load_time_windows %}
@@ -34,8 +32,8 @@
             <label for="time_window_id">{{ time_window.start}} - {{time_window.end}}</label>
         </fieldset>
         {% endfor %}
+        {% endfor %}
     </fieldset>
-    {% endfor %}
     <input type="submit" value="Create">
 </form>
 {% endblock %}
