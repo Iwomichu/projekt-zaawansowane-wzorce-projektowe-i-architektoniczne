@@ -27,6 +27,7 @@ def get_transports(
     )
     is_transporter = user_role_checker.is_user_of_role(user_id, role=UserRole.TRANSPORT)
     is_clerk = user_role_checker.is_user_of_role(user_id, role=UserRole.CLERK)
+    print(transport_requests)
     return templates.TemplateResponse(
         "listAllTransportRequests.html",
         {

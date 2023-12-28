@@ -82,7 +82,7 @@ class ListTransportRequestsWorkflow:
                 select(TransportRequest)
                 .where(
                     TransportRequest.request_deadline
-                    < self.today_provider.today().date()
+                    > self.today_provider.today().date()
                 )
                 .where(TransportRequest.transport.has(status=TransportStatus.REQUESTED))
             ).scalars()
