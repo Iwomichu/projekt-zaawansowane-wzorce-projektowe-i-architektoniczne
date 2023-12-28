@@ -48,7 +48,6 @@ accept_supply_offer_for_request_workflow = AcceptRequestedSupplyOfferWorkflow(
 def get_list_supply_requests(
     request: Request, user_id: Annotated[int, Depends(get_current_user_id)]
 ):
-    # TODO: Should not list already fulfilled requests
     supply_requests = list_supply_requests_workflow.list_supply_requests(user_id)
     is_supplier = user_role_checker.is_user_of_role(user_id, role=UserRole.SUPPLIER)
     is_clerk = user_role_checker.is_user_of_role(user_id, role=UserRole.CLERK)

@@ -12,6 +12,7 @@ from zwpa.model import (
     TimeWindow,
     Transport,
     TransportRequest,
+    TransportStatus,
     UserRole,
     Warehouse,
 )
@@ -313,6 +314,7 @@ class Fixtures:
         session: Session,
         unit_count: int = UNIT_COUNT,
         price: Decimal = PRICE,
+        status: TransportStatus = TransportStatus.REQUESTED,
         pickup_location_id: int | None = None,
         destination_location_id: int | None = None,
         load_time_window_id: int | None = None,
@@ -339,6 +341,7 @@ class Fixtures:
             destination_location_id=destination_location_id,
             load_time_window_id=load_time_window_id,
             destination_time_window_id=destination_time_window_id,
+            status=status,
         )
         session.add(transport)
         return transport
@@ -349,14 +352,12 @@ class Fixtures:
         session: Session,
         transport_id: int,
         request_deadline: date = REQUEST_DEADLINE,
-        accepted: bool = False,
         id: int | None = None,
     ) -> TransportRequest:
         transport_request = TransportRequest(
             transport_id=transport_id,
             id=id if id is not None else cls.next_id(),
             request_deadline=request_deadline,
-            accepted=accepted,
         )
         session.add(transport_request)
         return transport_request

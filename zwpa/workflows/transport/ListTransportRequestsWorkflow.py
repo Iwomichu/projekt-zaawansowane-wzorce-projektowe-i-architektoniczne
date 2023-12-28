@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, Session
 from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
 
-from zwpa.model import TransportRequest, User, UserRole, Transport
+from zwpa.model import TransportRequest, TransportStatus, User, UserRole, Transport
 from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
     DefaultTodayProvider,
     TodayProvider,
@@ -84,6 +84,6 @@ class ListTransportRequestsWorkflow:
                     TransportRequest.request_deadline
                     < self.today_provider.today().date()
                 )
-                .where(TransportRequest.accepted == False)
+                .where(TransportRequest.transport.has(status=TransportStatus.REQUESTED))
             ).scalars()
         )

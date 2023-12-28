@@ -175,6 +175,20 @@ class UserSectionPermissionRecord(Base):
     user: Mapped[User] = relationship(back_populates="permissions")
     section = mapped_column(AppSectionType)
 
+class TransportStatus(str, Enum):
+    REQUESTED = "REQUESTED"
+    OFFER_ACCEPTED = "OFFER_ACCEPTED"
+    COMPLETE = "COMPLETE"
+
+
+TransportStatusType: pgEnum = pgEnum(
+    TransportStatus,
+    name="transport_status",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
 
 class Transport(Base):
     __tablename__ = "transports"
@@ -182,6 +196,7 @@ class Transport(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     unit_count: Mapped[int] = mapped_column(Integer)
     price: Mapped[decimal.Decimal] = mapped_column(NumericMoney)
+    status: Mapped[TransportStatus] = mapped_column(TransportStatusType)
 
     pickup_location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
     destination_location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
@@ -209,7 +224,6 @@ class TransportRequest(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     request_deadline: Mapped[date] = mapped_column(Date)
-    accepted: Mapped[bool] = mapped_column(Boolean)
     transport_id: Mapped[int] = mapped_column(ForeignKey("transports.id"))
 
     transport: Mapped["Transport"] = relationship()

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}All transport requests{% endblock %}
+{% block content %}
+
+<h1>List of your transport requests</h1>
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>Price</th>
+        <th>Unit count</th>
+        <th>Request deadline</th>
+        <th>Pickup longitude</th>
+        <th>Pickup latitude</th>
+        <th>Pickup time window start</th>
+        <th>Pickup time window end</th>
+        <th>Destination longitude</th>
+        <th>Destination latitude</th>
+        <th>Destination time window start</th>
+        <th>Destination time window end</th>
+        <th>Accept</th>
+    </tr>
+    {% for transport_request in transport_requests %}
+    <tr>
+        <td>{{transport_request.request_id}}</td>
+        <td>{{transport_request.price}}</td>
+        <td>{{transport_request.unit_count}}</td>
+        <td>{{transport_request.request_deadline}}</td>
+        <td>{{transport_request.pickup_location_longitude}}</td>
+        <td>{{transport_request.pickup_location_latitude}}</td>
+        <td>{{transport_request.load_time_window_start}}</td>
+        <td>{{transport_request.load_time_window_end}}</td>
+        <td>{{transport_request.destination_location_longitude}}</td>
+        <td>{{transport_request.destination_location_latitude}}</td>
+        <td>{{transport_request.destination_time_window_start}}</td>
+        <td>{{transport_request.destination_time_window_end}}</td>
+        <td>
+            {% if transport_request.accepted %}
+            ✅
+            {% else %}
+            <a href="/transport_requests/accept?transport_request_id={{transport_request.id}}">Edit</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

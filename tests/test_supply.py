@@ -17,6 +17,7 @@ from zwpa.model import (
     SupplyStatus,
     SupplyTransportRequest,
     TransportRequest,
+    TransportStatus,
     UserRole,
 )
 from zwpa.views.SupplyOfferView import SupplyOfferView
@@ -348,7 +349,7 @@ class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
                 .where(SupplyOffer.id == self.supply_offer_id)
                 .one()
             )
-            self.assertFalse(supply_transport_request.transport_request.accepted)
+            self.assertEqual(supply_transport_request.transport_request.transport.status, TransportStatus.REQUESTED)
             self.assertEqual(
                 self.price, supply_transport_request.transport_request.transport.price
             )

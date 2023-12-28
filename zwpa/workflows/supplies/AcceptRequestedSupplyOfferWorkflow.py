@@ -9,6 +9,7 @@ from zwpa.model import (
     SupplyTransportRequest,
     Transport,
     TransportRequest,
+    TransportStatus,
     UserRole,
 )
 from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
@@ -95,10 +96,10 @@ class AcceptRequestedSupplyOfferWorkflow:
             destination_location_id=supply_offer.supply.warehouse.location_id,
             load_time_window_id=supply_offer.load_time_window_id,
             destination_time_window_id=supply_offer.supply.supply_time_window_id,
+            status=TransportStatus.REQUESTED,
         )
         transport_request = TransportRequest(
             request_deadline=transport_request_deadline,
-            accepted=False,
             transport=transport,
         )
         supply_transport_request = SupplyTransportRequest(

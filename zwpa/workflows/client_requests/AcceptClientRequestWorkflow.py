@@ -6,6 +6,7 @@ from zwpa.model import (
     ClientRequest,
     Transport,
     TransportRequest,
+    TransportStatus,
     User,
     UserRole,
     Warehouse,
@@ -93,11 +94,11 @@ class AcceptClientRequestWorkflow:
             load_time_window_id=load_time_window_id,
             destination_time_window_id=client_request.supply_time_window_id,
             price=price,
+            status=TransportStatus.REQUESTED,
         )
         transport_request = TransportRequest(
             request_deadline=transport_request_deadline,
             transport=transport,
-            accepted=False,
         )
         session.add(transport)
         session.add(transport_request)
