@@ -23,7 +23,7 @@ list_user_roles_workflow = ListUserRolesWorkflow(session_maker)
 @router.get("/create")
 def get_create_user(request: Request):
     return templates.TemplateResponse(
-        "createAccountPage.html",
+        "user/createAccountPage.html",
         {"request": request},
     )
 
@@ -34,7 +34,7 @@ def post_create_user(
 ):
     create_user_workflow.create_user(login, plain_text_password=password)
     return templates.TemplateResponse(
-        "accountCreatedPage.html",
+        "user/accountCreatedPage.html",
         {"request": request},
     )
 
@@ -45,7 +45,7 @@ def get_user_roles(
 ):
     user_roles_views = list_user_roles_workflow.list_user_roles_workflow(user_id)
     return templates.TemplateResponse(
-        "userRolesPage.html",
+        "user/userRolesPage.html",
         {"request": request, "users": [asdict(view) for view in user_roles_views]},
     )
 
@@ -60,7 +60,7 @@ def get_user_roles_update_form(
         admin_id=user_id, user_id=target_id
     )
     return templates.TemplateResponse(
-        "editUserRolesPage.html",
+        "user/editUserRolesPage.html",
         {"request": request, "user": user_roles_view},
     )
 
@@ -94,6 +94,6 @@ def post_user_roles_update_form(
 
     user_roles_views = list_user_roles_workflow.list_user_roles_workflow(user_id)
     return templates.TemplateResponse(
-        "userRolesPage.html",
+        "user/userRolesPage.html",
         {"request": request, "users": [asdict(view) for view in user_roles_views]},
     )

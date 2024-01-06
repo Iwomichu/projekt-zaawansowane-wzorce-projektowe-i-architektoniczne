@@ -52,7 +52,7 @@ def get_list_supply_requests(
     is_supplier = user_role_checker.is_user_of_role(user_id, role=UserRole.SUPPLIER)
     is_clerk = user_role_checker.is_user_of_role(user_id, role=UserRole.CLERK)
     return templates.TemplateResponse(
-        "listSupplyRequests.html",
+        "supply/listSupplyRequests.html",
         {
             "request": request,
             "is_supplier": is_supplier,
@@ -68,7 +68,7 @@ def get_create_supply_request(
 ):
     supply_request_form_data = handle_supply_request_form_workflow.get_data(user_id)
     return templates.TemplateResponse(
-        "createSupplyRequestPage.html",
+        "supply/createSupplyRequestPage.html",
         {"request": request, "data": asdict(supply_request_form_data)},
     )
 
@@ -102,7 +102,7 @@ def get_create_supply_offer(
 ):
     user_role_checker.assert_user_of_role(user_id, role=UserRole.SUPPLIER)
     return templates.TemplateResponse(
-        "createSupplyOfferPage.html",
+        "supply/createSupplyOfferPage.html",
         {"request": request, "supply_request_id": supply_request_id},
     )
 
@@ -144,7 +144,7 @@ def get_supply_offers_for_request(
         )
     )
     return templates.TemplateResponse(
-        "listSupplyOffersForRequest.html",
+        "supply/listSupplyOffersForRequest.html",
         {
             "request": request,
             "supply_request_id": supply_request_id,
@@ -162,7 +162,7 @@ def get_accept_supply_offer_for_request(
 ):
     user_role_checker.assert_user_of_role(user_id, role=UserRole.CLERK)
     return templates.TemplateResponse(
-        "acceptSupplyOfferForRequest.html",
+        "supply/acceptSupplyOfferForRequest.html",
         {
             "request": request,
             "supply_request_id": supply_request_id,

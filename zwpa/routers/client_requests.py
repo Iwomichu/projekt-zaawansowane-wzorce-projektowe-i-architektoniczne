@@ -41,7 +41,7 @@ def my_client_requests(
             user_id
         )
         return templates.TemplateResponse(
-            "listOwnClientRequestsPage.html",
+            "client/listOwnClientRequestsPage.html",
             {
                 "request": request,
                 "client_requests": [asdict(view) for view in request_views],
@@ -60,7 +60,7 @@ def all_client_requests(
             user_id
         )
         return templates.TemplateResponse(
-            "listAllClientRequestsPage.html",
+            "client/listAllClientRequestsPage.html",
             {
                 "request": request,
                 "client_requests": [asdict(view) for view in request_views],
@@ -78,7 +78,7 @@ def get_client_request_form(
         handle_client_request_form_workflow.get_client_request_form_init_data(user_id)
     )
     return templates.TemplateResponse(
-        "createClientRequestPage.html",
+        "client/createClientRequestPage.html",
         {"request": request, "products": [asdict(view) for view in product_views]},
     )
 
@@ -114,7 +114,7 @@ def post_client_request_form(
 def get_accept_client_request_form(request: Request, client_request_id: int, user_id: Annotated[int, Depends(get_current_user_id)]):
     client_request_acceptance_form_data = handle_client_request_acceptance_form_workflow.get_form_data(user_id, client_request_id)
     return templates.TemplateResponse(
-        "acceptClientRequestPage.html",
+        "client/acceptClientRequestPage.html",
         {"request": request, "data": asdict(client_request_acceptance_form_data)},
     )
 

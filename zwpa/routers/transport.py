@@ -34,7 +34,7 @@ def get_transports(
     is_clerk = user_role_checker.is_user_of_role(user_id, role=UserRole.CLERK)
     print(transport_requests)
     return templates.TemplateResponse(
-        "listAllTransportRequests.html",
+        "transport/listAllTransportRequests.html",
         {
             "request": request,
             "is_transporter": is_transporter,
@@ -54,7 +54,7 @@ def post_transport_offer_for_request(request: Request, user_id: Annotated[int, D
 def get_transport_offers_for_request(request: Request, user_id: Annotated[int, Depends(get_current_user_id)], transport_request_id: int):
     transport_offers = list_transport_offers_for_request_workflow.list_transport_offer_for_request(user_id, transport_request_id)
     return templates.TemplateResponse(
-        "listTransportOffersForRequest.html",
+        "transport/listTransportOffersForRequest.html",
         {
             "request": request,
             "transport_request_id": transport_request_id,
