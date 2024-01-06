@@ -175,6 +175,7 @@ class UserSectionPermissionRecord(Base):
     user: Mapped[User] = relationship(back_populates="permissions")
     section = mapped_column(AppSectionType)
 
+
 class TransportStatus(str, Enum):
     REQUESTED = "REQUESTED"
     OFFER_ACCEPTED = "OFFER_ACCEPTED"
@@ -184,6 +185,21 @@ class TransportStatus(str, Enum):
 TransportStatusType: pgEnum = pgEnum(
     TransportStatus,
     name="transport_status",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+
+class TransportOfferStatus(str, Enum):
+    PENDING = "PENDING"
+    REJECTED = "REJECTED"
+    ACCEPTED = "ACCEPTED"
+
+
+TransportOfferStatusType: pgEnum = pgEnum(
+    TransportOfferStatus,
+    name="transport_offer_status",
     create_constraint=True,
     metadata=Base.metadata,
     validate_strings=True,
@@ -236,6 +252,7 @@ class TransportOffer(Base):
 
     transport_id: Mapped[int] = mapped_column(ForeignKey("transports.id"))
     transporter_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    status: Mapped[TransportOfferStatus] = mapped_column(TransportOfferStatusType)
 
     transport: Mapped["Transport"] = relationship(foreign_keys=[transport_id])
     transporter: Mapped["User"] = relationship(foreign_keys=[transporter_id])

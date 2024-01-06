@@ -11,6 +11,8 @@ from zwpa.model import (
     SupplyStatus,
     TimeWindow,
     Transport,
+    TransportOffer,
+    TransportOfferStatus,
     TransportRequest,
     TransportStatus,
     UserRole,
@@ -170,7 +172,7 @@ class Fixtures:
         )
         session.add(location)
         return location
-    
+
     @classmethod
     def new_location_view(cls, location_id: int) -> LocationView:
         return LocationView(id=location_id, longitude=LONGITUDE, latitude=LATITUDE)
@@ -377,7 +379,7 @@ class Fixtures:
         destination_time_window_start: time = TIME_WINDOW_START,
         destination_time_window_end: time = TIME_WINDOW_END,
         request_deadline: date = REQUEST_DEADLINE,
-        user_already_made_offer_on_the_request = False,
+        user_already_made_offer_on_the_request=False,
     ) -> TransportRequestView:
         return TransportRequestView(
             request_id=request_id,
@@ -394,6 +396,24 @@ class Fixtures:
             request_deadline=request_deadline,
             user_already_made_offer_on_the_request=user_already_made_offer_on_the_request,
         )
+
+    @classmethod
+    def new_transport_offer(
+        cls,
+        session: Session,
+        transport_id: int,
+        transporter_id: int,
+        status: TransportOfferStatus = TransportOfferStatus.PENDING,
+        id: int | None = None,
+    ) -> TransportOffer:
+        offer = TransportOffer(
+            id=id if id is not None else cls.next_id(),
+            transport_id=transport_id,
+            transporter_id=transporter_id,
+            status=status,
+        )
+        session.add(offer)
+        return offer
 
     @classmethod
     def new_time_window_view(cls, time_window_id: int) -> TimeWindowView:
@@ -611,7 +631,12 @@ class Fixtures:
             price=PRICE,
             transport_deadline=TRANSPORT_DEADLINE,
             id=supply_offer_id,
-            supply=cls.new_supply_view(supply_id, product_id=product_id, warehouse_id=warehouse_id, time_window_id=destination_window_id),
+            supply=cls.new_supply_view(
+                supply_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                time_window_id=destination_window_id,
+            ),
             load_time_window=cls.new_time_window_view(load_time_window_id),
             supplier_login=LOGIN,
             source_location=cls.new_location_view(source_location_id),

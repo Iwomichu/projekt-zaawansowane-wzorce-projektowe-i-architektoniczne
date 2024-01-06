@@ -16,7 +16,9 @@
         <td>{{transport_offer.transporter_id}}</td>
         <td>{{transport_offer.transporter_login}}</td>
         <td>
-            <a href="/transport/request/{{transport_request_id}}/offer/{{transport_offer.transport_offer_id}}/accept">Accept</a>
+            <form method="post" action="/transport/request/{{transport_request_id}}/offer/{{transport_offer.transport_offer_id}}/accept">
+                <button class="btn btn-primary" type="submit">Accept offer</button>
+            </form>
         </td>
     </tr>
     {% endfor %}
