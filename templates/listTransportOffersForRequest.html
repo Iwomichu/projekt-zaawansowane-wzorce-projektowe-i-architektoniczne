@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}All transport offers for request{% endblock %}
+{% block content %}
+
+<h1>List of transport offers for request</h1>
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>Transporter Id</th>
+        <th>Transporter login</th>
+        <th>Action</th>
+    </tr>
+    {% for transport_offer in transport_offers %}
+    <tr>
+        <td>{{transport_offer.transport_offer_id}}</td>
+        <td>{{transport_offer.transporter_id}}</td>
+        <td>{{transport_offer.transporter_login}}</td>
+        <td>
+            <a href="/transport/request/{{transport_request_id}}/offer/{{transport_offer.transport_offer_id}}/accept">Accept</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

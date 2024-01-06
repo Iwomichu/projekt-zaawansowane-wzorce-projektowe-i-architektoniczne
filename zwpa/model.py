@@ -229,6 +229,18 @@ class TransportRequest(Base):
     transport: Mapped["Transport"] = relationship()
 
 
+class TransportOffer(Base):
+    __tablename__ = "transport_offers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    transport_id: Mapped[int] = mapped_column(ForeignKey("transports.id"))
+    transporter_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+
+    transport: Mapped["Transport"] = relationship(foreign_keys=[transport_id])
+    transporter: Mapped["User"] = relationship(foreign_keys=[transporter_id])
+
+
 warehouse_time_windows_associate_table = Table(
     "warehouse_time_windows_associate_table",
     Base.metadata,

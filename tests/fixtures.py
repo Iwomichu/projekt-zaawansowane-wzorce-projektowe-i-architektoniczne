@@ -377,6 +377,7 @@ class Fixtures:
         destination_time_window_start: time = TIME_WINDOW_START,
         destination_time_window_end: time = TIME_WINDOW_END,
         request_deadline: date = REQUEST_DEADLINE,
+        user_already_made_offer_on_the_request = False,
     ) -> TransportRequestView:
         return TransportRequestView(
             request_id=request_id,
@@ -391,6 +392,7 @@ class Fixtures:
             destination_time_window_start=destination_time_window_start,
             destination_time_window_end=destination_time_window_end,
             request_deadline=request_deadline,
+            user_already_made_offer_on_the_request=user_already_made_offer_on_the_request,
         )
 
     @classmethod

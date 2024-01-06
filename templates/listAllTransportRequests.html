@@ -17,7 +17,7 @@
         <th>Destination latitude</th>
         <th>Destination time window start</th>
         <th>Destination time window end</th>
-        <th>Accept</th>
+        <th>Action</th>
     </tr>
     {% for transport_request in transport_requests %}
     <tr>
@@ -34,10 +34,15 @@
         <td>{{transport_request.destination_time_window_start}}</td>
         <td>{{transport_request.destination_time_window_end}}</td>
         <td>
-            {% if transport_request.accepted %}
-            ✅
-            {% else %}
-            <a href="/transport_requests/accept?transport_request_id={{transport_request.id}}">Edit</a>
+            {% if is_transporter %}
+            {% if not transport_request.user_already_made_offer_on_the_request %}
+            <form method="post" action="/transport/request/{{transport_request.request_id}}/offer">
+                <button class="btn btn-primary" type="submit">Make offer</button>
+            </form>
+            {% endif %}
+            {% endif %}
+            {% if is_clerk %}
+            <a href="/transport/request/{{transport_request.request_id}}/offers">List offers</a>
             {% endif %}
         </td>
     </tr>
