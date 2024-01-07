@@ -2,9 +2,12 @@ from dataclasses import asdict
 from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
-from zwpa.model import UserRole
+from zwpa.model import TransportStatus, UserRole
 from zwpa.workflows.transport.AcceptTransportOfferForRequestWorkflow import (
     AcceptTransportOfferForRequestWorkflow,
+)
+from zwpa.workflows.transport.ChangeTransportStatusWorkflow import (
+    ChangeTransportStatusWorkflow,
 )
 from zwpa.workflows.transport.CreateTransportOfferForRequestWorkflow import (
     CreateTransportOfferForRequestWorkflow,
@@ -17,6 +20,7 @@ from zwpa.workflows.transport.ListTransportRequestsWorkflow import (
     ListTransportRequestsWorkflow,
 )
 from zwpa.workflows.transport.ListTransportsWorkflow import ListTransportWorkflow
+from zwpa.workflows.transport.TransportAccessChecker import TransportAccessChecker
 
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
 from .shared import get_current_user_id, session_maker, templates
@@ -27,6 +31,7 @@ router = APIRouter(
     tags=["transport"],
 )
 user_role_checker = UserRoleChecker(session_maker)
+transport_access_checker = TransportAccessChecker(session_maker)
 list_transports_workflow = ListTransportWorkflow(session_maker)
 list_transport_requests_workflow = ListTransportRequestsWorkflow(session_maker)
 create_transport_offer_for_request_workflow = CreateTransportOfferForRequestWorkflow(
@@ -39,6 +44,7 @@ accept_transport_offer_for_request_workflow = AcceptTransportOfferForRequestWork
     session_maker
 )
 get_transport_workflow = GetTransportWorkflow(session_maker)
+change_transport_status_workflow = ChangeTransportStatusWorkflow(session_maker)
 
 
 @router.get("/transports")
@@ -62,15 +68,41 @@ def get_transport(
     transport_id: int,
 ):
     transport = get_transport_workflow.get_transport(user_id, transport_id)
-    is_transporter_of_this_transport = get_transport_workflow.is_transporter_of_this_transport(user_id, transport_id)
+    is_transporter_of_this_transport = (
+        transport_access_checker.is_transporter_of_this_transport(user_id, transport_id)
+    )
     return templates.TemplateResponse(
         "transport/transportView.html",
         {
             "request": request,
             "transport": asdict(transport),
-            "is_transporter_of_this_transport": is_transporter_of_this_transport
+            "is_transporter_of_this_transport": is_transporter_of_this_transport,
         },
     )
+
+
+@router.post("/transport/{transport_id}/status/loaded")
+def post_transport_status_loaded(
+    request: Request,
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    transport_id: int,
+):
+    change_transport_status_workflow.change_transport_status(
+        user_id, transport_id, new_status=TransportStatus.IN_TRANSIT
+    )
+    return RedirectResponse(url=f"/transport/transport/{transport_id}", status_code=303)
+
+
+@router.post("/transport/{transport_id}/status/delivered")
+def post_transport_status_delivered(
+    request: Request,
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    transport_id: int,
+):
+    change_transport_status_workflow.change_transport_status(
+        user_id, transport_id, new_status=TransportStatus.COMPLETE
+    )
+    return RedirectResponse(url=f"/transport/transport/{transport_id}", status_code=303)
 
 
 @router.get("/requests")

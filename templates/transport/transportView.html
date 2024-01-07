@@ -35,12 +35,12 @@
 <h5>Action</h5>
 {% endif %}
 {% if is_transporter_of_this_transport and transport.status == "OFFER_ACCEPTED" %}
-<form method="post" action="/transport/{{transport.id}}/status/loaded">
+<form method="post" action="/transport/transport/{{transport.id}}/status/loaded">
     <button class="btn btn-primary" type="submit">Mark loaded</button>
 </form>
 {% endif %}
 {% if is_transporter_of_this_transport and transport.status == "IN_TRANSIT" %}
-<form method="post" action="/transport/{{transport.id}}/status/delivered">
+<form method="post" action="/transport/transport/{{transport.id}}/status/delivered">
     <button class="btn btn-primary" type="submit">Mark delivered</button>
 </form>
 {% endif %}
