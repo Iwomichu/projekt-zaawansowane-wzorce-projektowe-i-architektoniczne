@@ -3,16 +3,12 @@ from datetime import date, time
 from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, Session
-from zwpa.exceptions.UserLacksRoleException import UserLacksRoleException
 
 from zwpa.model import (
-    SupplyOffer,
     TransportOffer,
     TransportRequest,
     TransportStatus,
-    User,
     UserRole,
-    Transport,
 )
 from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
     DefaultTodayProvider,

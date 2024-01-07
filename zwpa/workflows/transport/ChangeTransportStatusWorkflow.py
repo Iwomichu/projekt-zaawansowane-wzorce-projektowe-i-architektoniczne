@@ -1,8 +1,6 @@
 from sqlalchemy.orm import sessionmaker, Session
-from zwpa.model import Transport, TransportStatus, UserRole
+from zwpa.model import Transport, TransportStatus
 from zwpa.workflows.transport.TransportAccessChecker import TransportAccessChecker
-
-from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
 
 
 class ChangeTransportStatusWorkflow:

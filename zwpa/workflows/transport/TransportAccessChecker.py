@@ -12,7 +12,6 @@ from zwpa.model import (
     TransportRequest,
     UserRole,
 )
-from zwpa.workflows.transport.ListTransportsWorkflow import CompleteTransportView
 
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
 

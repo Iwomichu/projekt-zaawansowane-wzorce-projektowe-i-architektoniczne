@@ -3,7 +3,7 @@ from unittest import skip
 from sqlalchemy import select
 from tests.fixtures import Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
-from zwpa.model import ClientTransportRequest, Transport, TransportRequest, UserRole
+from zwpa.model import ClientTransportRequest, UserRole
 from zwpa.model import ClientRequest
 from zwpa.workflows.client_requests.AcceptClientRequestWorkflow import (
     AcceptClientRequestWorkflow,

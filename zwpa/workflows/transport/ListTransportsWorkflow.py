@@ -11,10 +11,6 @@ from zwpa.model import (
     TransportStatus,
     UserRole,
 )
-from zwpa.views.LocationView import LocationView
-from zwpa.workflows.client_requests.HandleClientRequestAcceptanceFormWorkflow import (
-    TimeWindowView,
-)
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
 
 
