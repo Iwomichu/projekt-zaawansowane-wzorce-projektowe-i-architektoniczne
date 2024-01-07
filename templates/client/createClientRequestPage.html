@@ -2,46 +2,57 @@
 {% block title %}Create account{% endblock %}
 {% block content %}
 <h1>Create client request</h1>
-<form action="/client_requests/create" method="post">
-    <div>
-        <label for="price">Price</label>
-        <input type="number" name="price" id="price">
-    </div>
+<div class="row">
+    <form class="col-4" action="/client_requests/create" method="post">
+        <fieldset class="mb-3">
+            <legend>Select the product you want to request:</legend>
+            <select aria-label="Product" class="form-select" name="product" id="product">
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.label }}</option>
+                {% endfor %}
+            </select>
+        </fieldset>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="number" name="price" id="price" placeholder="">
+            <label for="price">Price</label>
+        </div>
 
-    <div>
-        <label for="unit_count">Unit count</label>
-        <input type="number" name="unit_count" id="unit_count">
-    </div>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="number" name="unit_count" id="unit_count" placeholder="">
+            <label for="unit_count">Unit count</label>
+        </div>
 
-    <div>
-        <label for="request_deadline">Request acceptance deadline</label>
-        <input type="date" name="request_deadline" id="request_deadline">
-    </div>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="date" name="request_deadline" id="request_deadline" placeholder="">
+            <label for="request_deadline">Request acceptance deadline</label>
+        </div>
 
-    <div>
-        <label for="transport_deadline">Transport deadline</label>
-        <input type="date" name="transport_deadline" id="transport_deadline">
-    </div>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="date" name="transport_deadline" id="transport_deadline" placeholder="">
+            <label for="transport_deadline">Transport deadline</label>
+        </div>
 
-    <div>
-        <label for="destination_longitude">Destination longitude</label>
-        <input type="number" name="destination_longitude" id="destination_longitude">
-        <label for="destination_latitude">Destination latitude</label>
-        <input type="number" name="destination_latitude" id="destination_latitude">
-    </div>
-    <div>
-        <label for="supply_time_window_start">Supply time start</label>
-        <input type="time" name="supply_time_window_start" id="supply_time_window_start">
-        <label for="supply_time_window_start">Supply time end</label>
-        <input type="time" name="supply_time_window_end" id="supply_time_window_end">
-    </div>
-    <fieldset>
-        <legend>Select the product you want to request:</legend>
-        {% for product in products %}
-        <label for="product">{{ product.label }}</label>
-        <input type="radio" name="product" id="product" value="{{ product.id }}">
-        {% endfor %}
-    </fieldset>
-    <input type="submit" value="Create">
-</form>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="number" name="destination_longitude" id="destination_longitude"
+                placeholder="">
+            <label for="destination_longitude">Destination longitude</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="number" name="destination_latitude" id="destination_latitude"
+                placeholder="">
+            <label for="destination_latitude">Destination latitude</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="time" name="supply_time_window_start" id="supply_time_window_start"
+                placeholder="">
+            <label for="supply_time_window_start">Supply time start</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="time" name="supply_time_window_end" id="supply_time_window_end"
+                placeholder="">
+            <label for="supply_time_window_start">Supply time end</label>
+        </div>
+        <input type="submit" value="Create">
+    </form>
+</div>
 {% endblock %}

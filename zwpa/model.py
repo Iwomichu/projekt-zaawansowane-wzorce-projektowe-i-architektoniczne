@@ -121,16 +121,19 @@ class ClientTransportRequest(Base):
     __tablename__ = "client_transport_requests"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    client_request_id: Mapped[int] = mapped_column(ForeignKey("client_requests.id"), index=True)
+    client_request_id: Mapped[int] = mapped_column(
+        ForeignKey("client_requests.id"), index=True
+    )
     transport_request_id: Mapped[int] = mapped_column(
         ForeignKey("transport_requests.id"), index=True
     )
 
-    client_request: Mapped["ClientRequest"] = relationship(foreign_keys=[client_request_id])
+    client_request: Mapped["ClientRequest"] = relationship(
+        foreign_keys=[client_request_id]
+    )
     transport_request: Mapped["TransportRequest"] = relationship(
         foreign_keys=[transport_request_id]
     )
-
 
 
 class Product(Base):
@@ -294,6 +297,19 @@ class Warehouse(Base):
     load_time_windows: Mapped[list["TimeWindow"]] = relationship(
         secondary=warehouse_time_windows_associate_table
     )
+
+
+class WarehouseProduct(Base):
+    __tablename__ = "warehouse_products"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    warehouse_id: Mapped[int] = mapped_column(ForeignKey("warehouses.id"))
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    current_count: Mapped[int] = mapped_column(Integer, default=0)
+
+    warehouse: Mapped["Warehouse"] = relationship(foreign_keys=[warehouse_id])
+    product: Mapped["Product"] = relationship(foreign_keys=[product_id])
 
 
 class SupplyStatus(str, Enum):

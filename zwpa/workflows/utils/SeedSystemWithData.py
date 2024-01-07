@@ -6,6 +6,58 @@ from sqlalchemy.orm import sessionmaker, Session
 from zwpa.model import *
 
 
+EXAMPLE_PRODUCTS = [
+    "Smartphone",
+    "Laptop",
+    "Tablet",
+    "Digital Camera",
+    "Headphones",
+    "Bluetooth Speaker",
+    "Smartwatch",
+    "Fitness Tracker",
+    "Desktop Computer",
+    "Gaming Console",
+    "E-reader",
+    "External Hard Drive",
+    "USB Flash Drive",
+    "Wireless Mouse",
+    "Mechanical Keyboard",
+    "Printer",
+    "Monitor",
+    "Projector",
+    "GPS Navigation System",
+    "Smart Home Hub",
+    "Action Camera",
+    "Drones",
+    "Virtual Reality Headset",
+    "Wireless Router",
+    "Portable Charger",
+    "Wireless Earbuds",
+    "Digital Voice Recorder",
+    "CCTV Camera",
+    "External SSD",
+    "Graphics Card",
+    "Computer Speakers",
+    "Microphone",
+    "Webcam",
+    "Network Switch",
+    "Solar Charger",
+    "Noise-Canceling Headphones",
+    "Fitness Smart Scale",
+    "Blu-ray Player",
+    "Digital Drawing Tablet",
+    "Wireless Charging Pad",
+    "Digital Thermometer",
+    "Power Strip",
+    "HDMI Cable",
+    "VR Gaming Controller",
+    "Smart Doorbell",
+    "Car GPS",
+    "Smart Lighting Kit",
+    "Solar-Powered Calculator"
+]
+
+
 class SeedSystemWithDataWorkflow:
     def __init__(self, session_maker: sessionmaker) -> None:
         self.session_maker = session_maker
@@ -44,10 +96,10 @@ class SeedSystemWithDataWorkflow:
     def create_products(self, session: Session, count: int) -> list[int]:
         products = [
             Product(
-                label=self.fake.word(),
+                label=label,
                 unit="ISO_CONTAINER",
             )
-            for _ in range(count)
+            for label in random.choices(EXAMPLE_PRODUCTS, k=count)
         ]
         session.add_all(products)
         session.commit()
