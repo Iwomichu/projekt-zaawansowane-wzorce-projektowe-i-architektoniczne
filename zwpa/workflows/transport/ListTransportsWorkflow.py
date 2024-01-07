@@ -23,7 +23,7 @@ class CompleteTransportView:
     id: int
     unit_count: int
     price: Decimal
-    status: TransportStatus
+    status: str
     pickup_location_longitude: float
     pickup_location_latitude: float
     destination_location_longitude: float
@@ -41,7 +41,7 @@ class CompleteTransportView:
             id=transport.id,
             unit_count=transport.unit_count,
             price=transport.price,
-            status=transport.status,
+            status=transport.status.name,
             pickup_location_longitude=transport.pickup_location.longitude,
             pickup_location_latitude=transport.pickup_location.latitude,
             destination_location_longitude=transport.destination_location.longitude,

@@ -117,6 +117,22 @@ class ClientRequest(Base):
     )
 
 
+class ClientTransportRequest(Base):
+    __tablename__ = "client_transport_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    client_request_id: Mapped[int] = mapped_column(ForeignKey("client_requests.id"), index=True)
+    transport_request_id: Mapped[int] = mapped_column(
+        ForeignKey("transport_requests.id"), index=True
+    )
+
+    client_request: Mapped["ClientRequest"] = relationship(foreign_keys=[client_request_id])
+    transport_request: Mapped["TransportRequest"] = relationship(
+        foreign_keys=[transport_request_id]
+    )
+
+
+
 class Product(Base):
     __tablename__ = "products"
 

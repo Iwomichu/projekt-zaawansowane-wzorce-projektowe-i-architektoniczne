@@ -3,7 +3,7 @@ from unittest import skip
 from sqlalchemy import select
 from tests.fixtures import Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
-from zwpa.model import Transport, TransportRequest, UserRole
+from zwpa.model import ClientTransportRequest, Transport, TransportRequest, UserRole
 from zwpa.model import ClientRequest
 from zwpa.workflows.client_requests.AcceptClientRequestWorkflow import (
     AcceptClientRequestWorkflow,
@@ -235,8 +235,9 @@ class ClientRequestTestCase(TestCaseWithDatabase):
 
         # then
         with self.session_maker() as session:
-            transport = session.execute(select(Transport)).scalar_one()
-            transport_request = session.execute(select(TransportRequest)).scalar_one()
+            client_transport_request = session.execute(select(ClientTransportRequest)).scalar_one()
+            transport_request = client_transport_request.transport_request
+            transport = transport_request.transport
             self.assertEqual(
                 client_request.destination_id, transport.destination_location_id
             )

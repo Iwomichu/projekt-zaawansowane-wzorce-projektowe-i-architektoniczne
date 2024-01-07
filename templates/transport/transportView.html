@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Transport {{transport.id}}{% endblock %}
+{% block content %}
+
+<h1>Transport {{transport.id}}</h1>
+<h5>Id</h5>
+{{transport.id}}
+<h5>Price</h5>
+{{transport.price}}
+<h5>Unit count</h5>
+{{transport.unit_count}}
+<h5>Pickup longitude</h5>
+{{transport.pickup_location_longitude}}
+<h5>Pickup latitude</h5>
+{{transport.pickup_location_latitude}}
+<h5>Pickup time window start</h5>
+{{transport.load_time_window_start}}
+<h5>Pickup time window end</h5>
+{{transport.load_time_window_end}}
+<h5>Destination longitude</h5>
+{{transport.destination_location_longitude}}
+<h5>Destination latitude</h5>
+{{transport.destination_location_latitude}}
+<h5>Destination time window start</h5>
+{{transport.destination_time_window_start}}
+<h5>Destination time window end</h5>
+{{transport.destination_time_window_end}}
+<h5>Transporter Id</h5>
+{{transport.transporter_id}}
+<h5>Transporter Login</h5>
+{{transport.transporter_login}}
+<h5>Status</h5>
+{{transport.status}}
+{% if is_transporter_of_this_transport and transport.status != "COMPLETE" %}
+<h5>Action</h5>
+{% endif %}
+{% if is_transporter_of_this_transport and transport.status == "OFFER_ACCEPTED" %}
+<form method="post" action="/transport/{{transport.id}}/status/loaded">
+    <button class="btn btn-primary" type="submit">Mark loaded</button>
+</form>
+{% endif %}
+{% if is_transporter_of_this_transport and transport.status == "IN_TRANSIT" %}
+<form method="post" action="/transport/{{transport.id}}/status/delivered">
+    <button class="btn btn-primary" type="submit">Mark delivered</button>
+</form>
+{% endif %}
+{% endblock %}

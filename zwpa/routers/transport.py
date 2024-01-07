@@ -9,6 +9,7 @@ from zwpa.workflows.transport.AcceptTransportOfferForRequestWorkflow import (
 from zwpa.workflows.transport.CreateTransportOfferForRequestWorkflow import (
     CreateTransportOfferForRequestWorkflow,
 )
+from zwpa.workflows.transport.GetTransportWorkflow import GetTransportWorkflow
 from zwpa.workflows.transport.ListTransportOffersForRequestWorkflow import (
     ListTransportOffersForRequestWorkflow,
 )
@@ -37,6 +38,7 @@ list_transport_offers_for_request_workflow = ListTransportOffersForRequestWorkfl
 accept_transport_offer_for_request_workflow = AcceptTransportOfferForRequestWorkflow(
     session_maker
 )
+get_transport_workflow = GetTransportWorkflow(session_maker)
 
 
 @router.get("/transports")
@@ -49,6 +51,24 @@ def get_all_transports(
         {
             "request": request,
             "transports": [asdict(view) for view in transports],
+        },
+    )
+
+
+@router.get("/transport/{transport_id}")
+def get_transport(
+    request: Request,
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    transport_id: int,
+):
+    transport = get_transport_workflow.get_transport(user_id, transport_id)
+    is_transporter_of_this_transport = get_transport_workflow.is_transporter_of_this_transport(user_id, transport_id)
+    return templates.TemplateResponse(
+        "transport/transportView.html",
+        {
+            "request": request,
+            "transport": asdict(transport),
+            "is_transporter_of_this_transport": is_transporter_of_this_transport
         },
     )
 

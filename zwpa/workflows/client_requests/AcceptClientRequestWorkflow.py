@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker, Session
 
 from zwpa.model import (
     ClientRequest,
+    ClientTransportRequest,
     Transport,
     TransportRequest,
     TransportStatus,
@@ -100,8 +101,10 @@ class AcceptClientRequestWorkflow:
             request_deadline=transport_request_deadline,
             transport=transport,
         )
+        client_transport_request = ClientTransportRequest(client_request = client_request, transport_request=transport_request)
         session.add(transport)
         session.add(transport_request)
+        session.add(client_transport_request)
 
     def __mark_request_as_accepted(
         self, session: Session, client_request_id: int

@@ -19,6 +19,7 @@
         <th>Transporter Id</th>
         <th>Transporter Login</th>
         <th>Status</th>
+        <th></th>
         <!-- <th>Last update</th> -->
     </tr>
     {% for transport in transports %}
@@ -37,6 +38,7 @@
         <td>{{transport.transporter_id}}</td>
         <td>{{transport.transporter_login}}</td>
         <td>{{transport.status}}</td>
+        <td><a href="/transport/transport/{{transport.id}}">Details</a></td>
     </tr>
     {% endfor %}
 </table>
