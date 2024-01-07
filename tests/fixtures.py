@@ -40,6 +40,7 @@ from zwpa.workflows.supplies.HandleSupplyRequestFormWorkflow import (
     SupplyRequestFormData,
 )
 from zwpa.workflows.transport.ListTransportRequestsWorkflow import TransportRequestView
+from zwpa.workflows.transport.ListTransportsWorkflow import CompleteTransportView
 from zwpa.workflows.user.ListUserRolesWorkflow import UserRolesView
 
 
@@ -395,6 +396,41 @@ class Fixtures:
             destination_time_window_end=destination_time_window_end,
             request_deadline=request_deadline,
             user_already_made_offer_on_the_request=user_already_made_offer_on_the_request,
+        )
+
+    @classmethod
+    def new_complete_transport_view(
+        cls,
+        transport_id: int,
+        unit_count: int = UNIT_COUNT,
+        price: Decimal = PRICE,
+        pickup_location_longitude: float = LONGITUDE,
+        pickup_location_latitude: float = LATITUDE,
+        destination_location_longitude: float = LONGITUDE,
+        destination_location_latitude: float = LATITUDE,
+        load_time_window_start: time = TIME_WINDOW_START,
+        load_time_window_end: time = TIME_WINDOW_END,
+        destination_time_window_start: time = TIME_WINDOW_START,
+        destination_time_window_end: time = TIME_WINDOW_END,
+        status: TransportStatus = TransportStatus.REQUESTED,
+        transporter_id: int | None = None,
+        transporter_login: str | None = None,
+    ) -> CompleteTransportView:
+        return CompleteTransportView(
+            unit_count=unit_count,
+            price=price,
+            pickup_location_longitude=pickup_location_longitude,
+            pickup_location_latitude=pickup_location_latitude,
+            destination_location_longitude=destination_location_longitude,
+            destination_location_latitude=destination_location_latitude,
+            load_time_window_start=load_time_window_start,
+            load_time_window_end=load_time_window_end,
+            destination_time_window_start=destination_time_window_start,
+            destination_time_window_end=destination_time_window_end,
+            id=transport_id,
+            status=status,
+            transporter_id=transporter_id,
+            transporter_login=transporter_login,
         )
 
     @classmethod

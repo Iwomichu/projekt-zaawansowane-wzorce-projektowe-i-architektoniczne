@@ -1,5 +1,6 @@
+from unittest import skip
 from sqlalchemy import select
-from tests.fixtures import Fixtures
+from tests.fixtures import PRICE, UNIT_COUNT, Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
 from zwpa.model import Transport, TransportOffer, TransportOfferStatus, TransportStatus, UserRole
 from zwpa.workflows.transport.AcceptTransportOfferForRequestWorkflow import (
@@ -184,5 +185,57 @@ class TransportTestCase(TestCaseWithDatabase):
             self.assertEqual(transport_offer.status, TransportOfferStatus.ACCEPTED)
             other_transport_offer = session.get_one(TransportOffer, other_transport_offer_id)
             self.assertEqual(other_transport_offer.status, TransportOfferStatus.REJECTED)
-        # transport status changed
         # TODO: manifest generated
+            
+    # TODO: Various transport related actions should also update the `last_status_change` of the transport
+
+    @skip("Low prio")
+    def test_clerk_can_list_all_transports(self):
+        self.assertFalse(True)
+        
+    @skip("Low prio")
+    def test_clerk_can_list_all_requested_transports(self):
+        self.assertFalse(True)
+        
+    @skip("Low prio")
+    def test_clerk_can_list_all_already_accepted_transports(self):
+        self.assertFalse(True)
+        
+    @skip("Low prio")
+    def test_clerk_can_list_all_complete_transports(self):
+        self.assertFalse(True)
+        
+    def test_temp(self):
+        with self.session_maker() as session:
+            clerk_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
+            transporter = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.TRANSPORT]
+            )
+            transporter_id = transporter.id
+            transport_id = Fixtures.new_transport(session).id
+            other_transporter_id = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.TRANSPORT]
+            ).id
+            available_request_id = Fixtures.new_transport_request(
+                session, transport_id=transport_id
+            ).id
+            transport_offer_id = Fixtures.new_transport_offer(
+                session, transport_id, transporter_id
+            ).id
+            other_transport_offer_id = Fixtures.new_transport_offer(
+                session, transport_id, other_transporter_id
+            ).id
+            session.commit()
+
+        by_status = None
+        by_transporter = None
+        with self.session_maker() as session:
+            query = select(Transport, TransportOffer).join(TransportOffer, isouter=True)
+            if by_status is not None:
+                query = query.where(Transport.status.in_(by_status))
+
+            if by_transporter is not None:
+                query = query.where(TransportOffer.transporter_id == by_transporter).where(TransportOffer.status == TransportOfferStatus.ACCEPTED)
+            items = session.execute(query).fetchall()
+            print(items)
+        self.assertFalse(True)

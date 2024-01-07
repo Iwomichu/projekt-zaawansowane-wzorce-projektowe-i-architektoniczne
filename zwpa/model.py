@@ -179,6 +179,7 @@ class UserSectionPermissionRecord(Base):
 class TransportStatus(str, Enum):
     REQUESTED = "REQUESTED"
     OFFER_ACCEPTED = "OFFER_ACCEPTED"
+    IN_TRANSIT = "IN_TRANSIT"
     COMPLETE = "COMPLETE"
 
 

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Transports{% endblock %}
+{% block content %}
+
+<h1>List of transports</h1>
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>Price</th>
+        <th>Unit count</th>
+        <th>Pickup longitude</th>
+        <th>Pickup latitude</th>
+        <th>Pickup time window start</th>
+        <th>Pickup time window end</th>
+        <th>Destination longitude</th>
+        <th>Destination latitude</th>
+        <th>Destination time window start</th>
+        <th>Destination time window end</th>
+        <th>Transporter Id</th>
+        <th>Transporter Login</th>
+        <th>Status</th>
+        <!-- <th>Last update</th> -->
+    </tr>
+    {% for transport in transports %}
+    <tr>
+        <td>{{transport.id}}</td>
+        <td>{{transport.price}}</td>
+        <td>{{transport.unit_count}}</td>
+        <td>{{transport.pickup_location_longitude}}</td>
+        <td>{{transport.pickup_location_latitude}}</td>
+        <td>{{transport.load_time_window_start}}</td>
+        <td>{{transport.load_time_window_end}}</td>
+        <td>{{transport.destination_location_longitude}}</td>
+        <td>{{transport.destination_location_latitude}}</td>
+        <td>{{transport.destination_time_window_start}}</td>
+        <td>{{transport.destination_time_window_end}}</td>
+        <td>{{transport.transporter_id}}</td>
+        <td>{{transport.transporter_login}}</td>
+        <td>{{transport.status}}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
