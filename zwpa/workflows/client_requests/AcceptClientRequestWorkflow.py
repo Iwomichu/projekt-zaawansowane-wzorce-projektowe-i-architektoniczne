@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, Session
 
 from zwpa.model import (
@@ -11,6 +12,7 @@ from zwpa.model import (
     User,
     UserRole,
     Warehouse,
+    WarehouseProduct,
 )
 from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
     DefaultTodayProvider,
@@ -24,6 +26,10 @@ class RequestAlreadyAccepted(Exception):
 
 
 class RequestTimedOut(Exception):
+    pass
+
+
+class ChosenWarehouseDoesNotSatisfyNeededCount(Exception):
     pass
 
 
@@ -48,7 +54,7 @@ class AcceptClientRequestWorkflow:
         with self.session_maker() as session:
             if not self.__is_user_of_role(session, user_id, role=UserRole.CLERK):
                 raise UserLacksRoleException()
-            self.__validate_request(session, client_request_id)
+            self.__validate_request(session, client_request_id, warehouse_id)
             self.__add_new_transport_with_request(
                 session=session,
                 client_request_id=client_request_id,
@@ -60,6 +66,9 @@ class AcceptClientRequestWorkflow:
             self.__mark_request_as_accepted(
                 session=session, client_request_id=client_request_id
             )
+            self.__decrease_count_in_warehouse(
+                session, client_request_id, source_warehouse_id=warehouse_id
+            )
             session.commit()
 
     def __is_user_of_role(self, session: Session, user_id: int, role: UserRole) -> bool:
@@ -68,14 +77,21 @@ class AcceptClientRequestWorkflow:
         ]
         return role in user_roles
 
-    def __validate_request(self, session: Session, client_request_id: int) -> None:
+    def __validate_request(self, session: Session, client_request_id: int, source_warehouse_id: int) -> None:
         client_request: ClientRequest = session.get_one(
             ClientRequest, client_request_id
         )
+        warehouse_product = session.execute(
+            select(WarehouseProduct)
+            .where(WarehouseProduct.warehouse_id == source_warehouse_id)
+            .where(WarehouseProduct.product_id == client_request.product_id)
+        ).scalar_one()
         if client_request.accepted:
             raise RequestAlreadyAccepted()
         if client_request.request_deadline < self.today_provider.today().date():
             raise RequestTimedOut()
+        if warehouse_product.current_count < client_request.unit_count:
+            raise ChosenWarehouseDoesNotSatisfyNeededCount()
 
     def __add_new_transport_with_request(
         self,
@@ -101,7 +117,9 @@ class AcceptClientRequestWorkflow:
             request_deadline=transport_request_deadline,
             transport=transport,
         )
-        client_transport_request = ClientTransportRequest(client_request = client_request, transport_request=transport_request)
+        client_transport_request = ClientTransportRequest(
+            client_request=client_request, transport_request=transport_request
+        )
         session.add(transport)
         session.add(transport_request)
         session.add(client_transport_request)
@@ -110,3 +128,17 @@ class AcceptClientRequestWorkflow:
         self, session: Session, client_request_id: int
     ) -> None:
         session.get_one(ClientRequest, client_request_id).accepted = True
+
+    def __decrease_count_in_warehouse(
+        self,
+        session: Session,
+        client_request_id: int,
+        source_warehouse_id: int,
+    ) -> None:
+        client_request = session.get_one(ClientRequest, client_request_id)
+        warehouse_product = session.execute(
+            select(WarehouseProduct)
+            .where(WarehouseProduct.warehouse_id == source_warehouse_id)
+            .where(WarehouseProduct.product_id == client_request.product_id)
+        ).scalar_one()
+        warehouse_product.current_count -= client_request.unit_count

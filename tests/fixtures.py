@@ -17,6 +17,7 @@ from zwpa.model import (
     TransportStatus,
     UserRole,
     Warehouse,
+    WarehouseProduct,
 )
 from zwpa.model import UserRoleAssignment
 
@@ -279,6 +280,24 @@ class Fixtures:
         )
         session.add(warehouse)
         return warehouse
+
+    @classmethod
+    def new_warehouse_product(
+        cls,
+        session: Session,
+        warehouse_id: int,
+        product_id: int,
+        current_count: int = UNIT_COUNT,
+        id: int | None = None,
+    ) -> WarehouseProduct:
+        warehouse_product = WarehouseProduct(
+            id=id if id is not None else cls.next_id(),
+            warehouse_id=warehouse_id,
+            product_id=product_id,
+            current_count=current_count,
+        )
+        session.add(warehouse_product)
+        return warehouse_product
 
     @classmethod
     def new_today_provider(

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import time
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, Session
-from zwpa.model import ClientRequest, TimeWindow, UserRole, Warehouse
+from zwpa.model import ClientRequest, TimeWindow, UserRole, Warehouse, WarehouseProduct
 from zwpa.workflows.client_requests.GetClientRequestsWorkflow import ClientRequestView
 
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
@@ -60,7 +60,12 @@ class HandleClientRequestAcceptanceFormWorkflow:
         self.user_role_checker.assert_user_of_role(user_id, role=UserRole.CLERK)
         with self.session_maker() as session:
             client_request = session.get(ClientRequest, client_request_id)
-            warehouses = session.execute(select(Warehouse)).scalars()
+            warehouses = session.execute(
+                select(Warehouse)
+                .join(WarehouseProduct, Warehouse.id == WarehouseProduct.warehouse_id)
+                .where(WarehouseProduct.product_id == client_request.product_id)
+                .where(WarehouseProduct.current_count >= client_request.unit_count)
+            ).scalars()
             return ClientRequestAcceptanceFormData(
                 client_request=ClientRequestView.from_client_request(client_request),
                 warehouses=[

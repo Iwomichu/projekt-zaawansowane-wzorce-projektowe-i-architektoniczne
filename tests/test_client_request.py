@@ -1,12 +1,14 @@
 from decimal import Decimal
 from unittest import skip
 from sqlalchemy import select
-from tests.fixtures import Fixtures
+from tests.fixtures import UNIT_COUNT, Fixtures
 from tests.test_case_with_database import TestCaseWithDatabase
-from zwpa.model import ClientTransportRequest, UserRole
+from zwpa.model import ClientTransportRequest, UserRole, WarehouseProduct
 from zwpa.model import ClientRequest
 from zwpa.workflows.client_requests.AcceptClientRequestWorkflow import (
     AcceptClientRequestWorkflow,
+    ChosenWarehouseDoesNotSatisfyNeededCount,
+    RequestAlreadyAccepted,
 )
 from zwpa.workflows.client_requests.AddNewClientRequestWorkflow import (
     AddNewClientRequestWorkflow,
@@ -176,18 +178,105 @@ class ClientRequestTestCase(TestCaseWithDatabase):
         # then
         self.assertCountEqual(expected_views, result_views)
 
-    def test_clerk_can_accept_a_client_request(self):
+    def test_clerk_can_access_client_request_acceptance_form(self):
         # given
+        with self.session_maker() as session:
+            client_id = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.CLIENT]
+            ).id
+            client_request = Fixtures.new_client_request(
+                session, client_id=client_id
+            )
+            client_request_id = client_request.id
+            warehouse = Fixtures.new_warehouse(session)
+            warehouse_id = warehouse.id
+            Fixtures.new_warehouse_product(
+                session, warehouse_id=warehouse_id, product_id=client_request.product_id
+            )
+            time_window_id = warehouse.load_time_windows[0].id
+            clerk_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
+            session.commit()
+
+        workflow = HandleClientRequestAcceptanceFormWorkflow(self.session_maker)
+        # when
+        result = workflow.get_form_data(clerk_id, client_request_id)
+        expected = Fixtures.new_client_request_acceptance_form_data(
+            client_id=client_id,
+            client_request_id=client_request_id,
+            warehouse_id=warehouse_id,
+            time_window_id=time_window_id,
+        )
+        # then
+        self.assertEqual(result, expected)
+
+    def test_client_request_acceptance_form_only_shows_warehouses_that_satisfy_the_count_requirement(
+        self,
+    ):
+        # given
+        with self.session_maker() as session:
+            client_id = Fixtures.new_user_with_roles(
+                session, roles=[UserRole.CLIENT]
+            ).id
+            client_request = Fixtures.new_client_request(session, client_id=client_id)
+            client_request_id = client_request.id
+            warehouse = Fixtures.new_warehouse(session)
+            Fixtures.new_warehouse(session)
+            warehouse_id = warehouse.id
+            time_window_id = warehouse.load_time_windows[0].id
+            clerk_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
+            Fixtures.new_warehouse_product(
+                session, warehouse_id=warehouse_id, product_id=client_request.product_id
+            )
+            session.commit()
+
+        workflow = HandleClientRequestAcceptanceFormWorkflow(self.session_maker)
+        # when
+        result = workflow.get_form_data(clerk_id, client_request_id)
+        expected = Fixtures.new_client_request_acceptance_form_data(
+            client_id=client_id,
+            client_request_id=client_request_id,
+            warehouse_id=warehouse_id,
+            time_window_id=time_window_id,
+        )
+        # then
+        self.assertEqual(result, expected)
+
+
+class ClientRequestAcceptingTestCase(TestCaseWithDatabase):
+    def _prepare_fixtures(self):
         today_provider = Fixtures.new_today_provider()
         with self.session_maker(expire_on_commit=False) as session:
             clerk = Fixtures.new_user(session)
             Fixtures.new_role_assignment(session, role=UserRole.CLERK, user_id=clerk.id)
             warehouse = Fixtures.new_warehouse(session)
+            product = Fixtures.new_product(session)
+            warehouse_product = Fixtures.new_warehouse_product(
+                session, warehouse_id=warehouse.id, product_id=product.id
+            )
             client_request = Fixtures.new_client_request(
-                session=session,
+                session=session, product_id=product.id
             )
             load_time_window = Fixtures.new_time_window(session)
             session.commit()
+        return (
+            today_provider,
+            clerk,
+            warehouse,
+            client_request,
+            load_time_window,
+            warehouse_product,
+        )
+
+    def test_clerk_can_accept_a_client_request(self):
+        # given
+        (
+            today_provider,
+            clerk,
+            warehouse,
+            client_request,
+            load_time_window,
+            warehouse_product,
+        ) = self._prepare_fixtures()
 
         # when
         AcceptClientRequestWorkflow(
@@ -209,17 +298,14 @@ class ClientRequestTestCase(TestCaseWithDatabase):
 
     def test_accepting_client_request_creates_new_transport_request(self):
         # given
-        today_provider = Fixtures.new_today_provider()
-        with self.session_maker(expire_on_commit=False) as session:
-            clerk = Fixtures.new_user(session)
-            Fixtures.new_role_assignment(session, role=UserRole.CLERK, user_id=clerk.id)
-            warehouse = Fixtures.new_warehouse(session)
-            client_request = Fixtures.new_client_request(
-                session=session,
-            )
-            load_time_window = Fixtures.new_time_window(session)
-            session.commit()
-
+        (
+            today_provider,
+            clerk,
+            warehouse,
+            client_request,
+            load_time_window,
+            warehouse_product,
+        ) = self._prepare_fixtures()
         # when
         AcceptClientRequestWorkflow(
             self.session_maker,
@@ -235,7 +321,9 @@ class ClientRequestTestCase(TestCaseWithDatabase):
 
         # then
         with self.session_maker() as session:
-            client_transport_request = session.execute(select(ClientTransportRequest)).scalar_one()
+            client_transport_request = session.execute(
+                select(ClientTransportRequest)
+            ).scalar_one()
             transport_request = client_transport_request.transport_request
             transport = transport_request.transport
             self.assertEqual(
@@ -253,25 +341,92 @@ class ClientRequestTestCase(TestCaseWithDatabase):
             )
             self.assertEqual(Decimal(1.00), transport.price)
 
-    def test_clerk_can_access_client_request_acceptance_form(self):
+    def test_accepting_client_request_reduces_product_count_at_warehouse(self):
         # given
+        (
+            today_provider,
+            clerk,
+            warehouse,
+            client_request,
+            load_time_window,
+            warehouse_product,
+        ) = self._prepare_fixtures()
+        # when
+        AcceptClientRequestWorkflow(
+            self.session_maker,
+            today_provider=today_provider,
+        ).accept_client_request(
+            user_id=clerk.id,
+            client_request_id=client_request.id,
+            warehouse_id=warehouse.id,
+            transport_request_deadline=client_request.request_deadline,
+            time_window_id=load_time_window.id,
+            price_for_transport=Decimal(1.00),
+        )
+
+        # then
         with self.session_maker() as session:
-            client_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLIENT]).id
-            client_request_id = Fixtures.new_client_request(session, client_id=client_id).id
-            warehouse = Fixtures.new_warehouse(session)
-            warehouse_id = warehouse.id
-            time_window_id = warehouse.load_time_windows[0].id
-            clerk_id = Fixtures.new_user_with_roles(session, roles=[UserRole.CLERK]).id
+            session.add(warehouse_product)
+            session.refresh(warehouse_product)
+            self.assertEqual(warehouse_product.current_count, 0)
+
+    def test_accepting_client_request_fails_if_product_unavailable(self):
+        # given
+        (
+            today_provider,
+            clerk,
+            warehouse,
+            client_request,
+            load_time_window,
+            warehouse_product,
+        ) = self._prepare_fixtures()
+        with self.session_maker() as session:
+            session.add(client_request)
+            client_request.unit_count = UNIT_COUNT + 1
             session.commit()
 
-        workflow = HandleClientRequestAcceptanceFormWorkflow(self.session_maker)
-        # when
-        result = workflow.get_form_data(clerk_id, client_request_id)
-        expected = Fixtures.new_client_request_acceptance_form_data(
-            client_id=client_id,
-            client_request_id=client_request_id,
-            warehouse_id=warehouse_id,
-            time_window_id=time_window_id,
-        )
-        # then
-        self.assertEqual(result, expected)
+            # when / then
+            self.assertRaises(
+                ChosenWarehouseDoesNotSatisfyNeededCount,
+                AcceptClientRequestWorkflow(
+                    self.session_maker,
+                    today_provider=today_provider,
+                ).accept_client_request,
+                user_id=clerk.id,
+                client_request_id=client_request.id,
+                warehouse_id=warehouse.id,
+                transport_request_deadline=client_request.request_deadline,
+                time_window_id=load_time_window.id,
+                price_for_transport=Decimal(1.00),
+            )
+
+    def test_accepting_client_request_fails_if_request_already_accepted(self):
+        # given
+        (
+            today_provider,
+            clerk,
+            warehouse,
+            client_request,
+            load_time_window,
+            warehouse_product,
+        ) = self._prepare_fixtures()
+
+        with self.session_maker() as session:
+            session.add(client_request)
+            client_request.accepted = True
+            session.commit()
+
+            # when / then
+            self.assertRaises(
+                RequestAlreadyAccepted,
+                AcceptClientRequestWorkflow(
+                    self.session_maker,
+                    today_provider=today_provider,
+                ).accept_client_request,
+                user_id=clerk.id,
+                client_request_id=client_request.id,
+                warehouse_id=warehouse.id,
+                transport_request_deadline=client_request.request_deadline,
+                time_window_id=load_time_window.id,
+                price_for_transport=Decimal(1.00),
+            )
