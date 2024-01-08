@@ -282,7 +282,7 @@ class Fixtures:
 
     @classmethod
     def new_today_provider(
-        cls, today: datetime = datetime(2020, 1, 1)
+        cls, today: datetime = datetime(2020, 1, 1, tzinfo=timezone.utc)
     ) -> TodayProvider:
         class FakeTodayProvider:
             def today(self) -> datetime:
