@@ -297,6 +297,9 @@ class Warehouse(Base):
     load_time_windows: Mapped[list["TimeWindow"]] = relationship(
         secondary=warehouse_time_windows_associate_table
     )
+    products: Mapped[list["WarehouseProduct"]] = relationship(
+        back_populates="warehouse"
+    )
 
 
 class WarehouseProduct(Base):

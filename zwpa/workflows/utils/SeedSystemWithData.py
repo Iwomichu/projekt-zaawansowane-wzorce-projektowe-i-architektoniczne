@@ -54,7 +54,7 @@ EXAMPLE_PRODUCTS = [
     "Smart Doorbell",
     "Car GPS",
     "Smart Lighting Kit",
-    "Solar-Powered Calculator"
+    "Solar-Powered Calculator",
 ]
 
 
@@ -68,14 +68,18 @@ class SeedSystemWithDataWorkflow:
             if self._is_system_seeded_already(session):
                 print("System is seeded already. Seeding aborted.")
                 return
-            
+
             self.create_users_with_role(session, role=UserRole.CLERK, count=5)
-            client_ids = self.create_users_with_role(session, role=UserRole.CLIENT, count=5)
+            client_ids = self.create_users_with_role(
+                session, role=UserRole.CLIENT, count=5
+            )
             self.create_users_with_role(session, role=UserRole.TRANSPORT, count=5)
             self.create_users_with_role(session, role=UserRole.SUPPLIER, count=5)
-            product_ids = self.create_products(session, count=10)
-            self.create_warehouses(session, count=20)
-            self.create_client_requests(session, count=10, client_ids=client_ids, product_ids=product_ids)
+            product_ids = self.create_products(session, count=30)
+            self.create_warehouses(session, count=20, product_ids=product_ids)
+            self.create_client_requests(
+                session, count=10, client_ids=client_ids, product_ids=product_ids
+            )
 
     def _is_system_seeded_already(self, session: Session) -> bool:
         return session.execute(select(Product)).first() is not None
@@ -99,22 +103,37 @@ class SeedSystemWithDataWorkflow:
                 label=label,
                 unit="ISO_CONTAINER",
             )
-            for label in random.choices(EXAMPLE_PRODUCTS, k=count)
+            for label in random.sample(EXAMPLE_PRODUCTS, k=count)
         ]
         session.add_all(products)
         session.commit()
         return [product.id for product in products]
 
-    def create_warehouses(self, session: Session, count: int) -> list[int]:
+    def create_warehouses(
+        self, session: Session, count: int, product_ids: list[int]
+    ) -> list[int]:
         warehouses = [
             Warehouse(
                 label=self.fake.word(),
                 location=self.create_location(),
-                load_time_windows=[self.create_time_window(), self.create_time_window()]
+                load_time_windows=[
+                    self.create_time_window(),
+                    self.create_time_window(),
+                ],
             )
             for _ in range(count)
         ]
+        warehouse_products = [
+            WarehouseProduct(
+                warehouse=warehouse,
+                product_id=product_id,
+                current_count=random.randint(0, 30),
+            )
+            for warehouse in warehouses
+            for product_id in random.sample(product_ids, k=random.randint(3, 12))
+        ]
         session.add_all(warehouses)
+        session.add_all(warehouse_products)
         session.commit()
         return [warehouse.id for warehouse in warehouses]
 
@@ -142,9 +161,21 @@ class SeedSystemWithDataWorkflow:
         session.commit()
         return user_ids
 
-    def create_client_requests(self, session: Session, count: int, client_ids: list[int], product_ids: list[int]) -> list[int]:
-        clients = list(session.execute(select(User).where(User.id.in_(client_ids))).scalars())
-        products = list(session.execute(select(Product).where(Product.id.in_(product_ids))).scalars())
+    def create_client_requests(
+        self,
+        session: Session,
+        count: int,
+        client_ids: list[int],
+        product_ids: list[int],
+    ) -> list[int]:
+        clients = list(
+            session.execute(select(User).where(User.id.in_(client_ids))).scalars()
+        )
+        products = list(
+            session.execute(
+                select(Product).where(Product.id.in_(product_ids))
+            ).scalars()
+        )
         requests = []
         for _ in range(count):
             client = random.choice(clients)
@@ -154,8 +185,12 @@ class SeedSystemWithDataWorkflow:
             request = ClientRequest(
                 price=Decimal(random.randint(1, 100)),
                 unit_count=random.randint(1, 10),
-                request_deadline=self.fake.date_between(date(2024, 1, 1), date(2024, 2, 1)),
-                transport_deadline=self.fake.date_between(date(2024, 2, 1), date(2024, 3, 1)),
+                request_deadline=self.fake.date_between(
+                    date(2024, 1, 1), date(2024, 2, 1)
+                ),
+                transport_deadline=self.fake.date_between(
+                    date(2024, 2, 1), date(2024, 3, 1)
+                ),
                 accepted=False,
                 product=product,
                 client=client,

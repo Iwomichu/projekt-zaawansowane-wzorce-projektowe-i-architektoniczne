@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Warehouses{% endblock %}
+{% block content %}
+
+<h1>List of warehouses</h1>
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>Label</th>
+        <th>Destination longitude</th>
+        <th>Destination latitude</th>
+        <th></th>
+    </tr>
+    {% for warehouse in warehouses %}
+    <tr>
+        <td>{{warehouse.id}}</td>
+        <td>{{warehouse.label}}</td>
+        <td>{{warehouse.longitude}}</td>
+        <td>{{warehouse.latitude}}</td>
+        <td><a href="/warehouse/{{warehouse.id}}">Details</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

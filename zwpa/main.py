@@ -22,6 +22,7 @@ from .routers.user import (
 from .routers.client_requests import router as client_requests_router
 from .routers.supply import router as supply_router
 from .routers.transport import router as transport_router
+from .routers.warehouse import router as warehouse_router
 
 
 create_root_workflow = CreateRootWorkflow(
@@ -46,6 +47,7 @@ app.include_router(user_router)
 app.include_router(client_requests_router)
 app.include_router(supply_router)
 app.include_router(transport_router)
+app.include_router(warehouse_router)
 
 
 @app.get("/", response_class=HTMLResponse)

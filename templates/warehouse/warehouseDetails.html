@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Warehouse details{% endblock %}
+{% block content %}
+
+<h1>Warehouse "{{warehouse.label}}"" details</h1>
+<h5>Id</h5>
+{{warehouse.id}}
+<h5>Label</h5>
+{{warehouse.label}}
+<h5>Destination longitude</h5>
+{{warehouse.longitude}}
+<h5>Destination latitude</h5>
+{{warehouse.latitude}}
+<th></th>
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>Label</th>
+        <th>Unit</th>
+        <th>Current count</th>
+        <th>Already requested count</th>
+        <th>Incoming count</th>
+    </tr>
+    {% for product in products %}
+    <tr>
+        <td>{{product.id}}</td>
+        <td>{{product.label}}</td>
+        <td>{{product.unit}}</td>
+        <td>{{product.current_count}}</td>
+        <td>{{product.already_requested_count}}</td>
+        <td>{{product.incoming_count}}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
