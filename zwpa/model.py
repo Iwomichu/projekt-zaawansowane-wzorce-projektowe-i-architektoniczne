@@ -141,6 +141,7 @@ class Product(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     label: Mapped[str] = mapped_column(String)
+    retail_price: Mapped[decimal.Decimal] = mapped_column(NumericMoney)
     unit: Mapped[str] = mapped_column(String)
 
 

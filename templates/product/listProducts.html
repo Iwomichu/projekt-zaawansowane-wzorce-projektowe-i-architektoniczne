@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+{% block content %}
+
+<h1>List of products</h1>
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>Label</th>
+        <th>Unit</th>
+        <th>Retail price</th>
+        <th>Mean sell bulk price (amount we are selling for)</th>
+        <th>Mean buy bulk price (amount we are buying for)</th>
+        <th>Amount in our warehouses</th>
+        <th>Amount incoming to our warehouses</th>
+        <th>Amount requested by us</th>
+        <th>Amount requested by clients</th>
+        <th></th>
+    </tr>
+    {% for product in products %}
+    <tr>
+        <td>{{product.id}}</td>
+        <td>{{product.label}}</td>
+        <td>{{product.unit}}</td>
+        <td>{{product.retail_price}}</td>
+        <td>{{product.mean_sell_bulk_price}}</td>
+        <td>{{product.mean_buy_bulk_price}}</td>
+        <td>{{product.amount_in_our_warehouses}}</td>
+        <td>{{product.amount_incoming_to_our_warehouses}}</td>
+        <td>{{product.amount_requested_by_us}}</td>
+        <td>{{product.amount_requested_by_clients}}</td>
+        <td><a href="/product/{{product.id}}">Edit</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

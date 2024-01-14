@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{product.label}} details{% endblock %}
+{% block content %}
+
+
+<h1>Product details</h1>
+<div class="row">
+    <form class="col-4" action="/product/{{product.id}}" method="post">
+        <div class="mb-3">
+            <h5>Id</h5>
+            {{product.id}}
+        </div>
+        <div class="mb-3">
+            <h5>Label</h5>
+            <input class="form-control" type="text" name="label" id="label" value="{{product.label}}">
+        </div>
+        <div class="mb-3">
+            <h5>Unit</h5>
+            {{product.unit}}
+        </div>
+        <div class="mb-3">
+            <h5>Retail price</h5>
+            <input class="form-control" type="number" name="retail_price" id="retail_price"
+                value="{{product.retail_price}}">
+        </div>
+        <div class="mb-3">
+            <h5>Mean sell bulk price (amount we are selling for)</h5>
+            {{product.mean_sell_bulk_price}}
+        </div>
+        <div class="mb-3">
+            <h5>Mean buy bulk price (amount we are buying for)</h5>
+            {{product.mean_buy_bulk_price}}
+        </div>
+        <div class="mb-3">
+            <h5>Amount in our warehouses</h5>
+            {{product.amount_in_our_warehouses}}
+        </div>
+        <div class="mb-3">
+            <h5>Amount incoming to our warehouses</h5>
+            {{product.amount_incoming_to_our_warehouses}}
+        </div>
+        <div class="mb-3">
+            <h5>Amount requested by us</h5>
+            {{product.amount_requested_by_us}}
+        </div>
+        <div class="mb-3">
+            <h5>Amount requested by clients</h5>
+            {{product.amount_requested_by_clients}}
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+{% endblock %}

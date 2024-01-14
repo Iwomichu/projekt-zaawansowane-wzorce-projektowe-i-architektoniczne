@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 import random
 from faker import Faker
@@ -6,7 +7,8 @@ from sqlalchemy.orm import sessionmaker, Session
 from zwpa.model import *
 
 
-EXAMPLE_PRODUCTS = [
+START_DATE = datetime.today()
+EXAMPLE_PRODUCTS = list({
     "Smartphone",
     "Laptop",
     "Tablet",
@@ -55,7 +57,7 @@ EXAMPLE_PRODUCTS = [
     "Car GPS",
     "Smart Lighting Kit",
     "Solar-Powered Calculator",
-]
+})
 
 
 class SeedSystemWithDataWorkflow:
@@ -102,6 +104,7 @@ class SeedSystemWithDataWorkflow:
             Product(
                 label=label,
                 unit="ISO_CONTAINER",
+                retail_price=Decimal(random.random() * (10 ** random.randint(0, 4))),
             )
             for label in random.sample(EXAMPLE_PRODUCTS, k=count)
         ]
@@ -186,10 +189,10 @@ class SeedSystemWithDataWorkflow:
                 price=Decimal(random.randint(1, 100)),
                 unit_count=random.randint(1, 10),
                 request_deadline=self.fake.date_between(
-                    date(2024, 1, 1), date(2024, 2, 1)
+                    START_DATE, START_DATE + timedelta(days=60)
                 ),
                 transport_deadline=self.fake.date_between(
-                    date(2024, 2, 1), date(2024, 3, 1)
+                    START_DATE + timedelta(days=30), START_DATE + timedelta(days=90)
                 ),
                 accepted=False,
                 product=product,
