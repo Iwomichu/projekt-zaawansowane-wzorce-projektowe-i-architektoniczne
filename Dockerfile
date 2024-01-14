@@ -26,6 +26,11 @@ ENV VIRTUAL_ENV=/app/.venv \
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
+FROM runtime AS zwpa
 COPY templates ./templates
 COPY zwpa ./zwpa
 ENTRYPOINT ["uvicorn", "zwpa.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+FROM runtime AS cart_manager
+COPY cart_manager ./cart_manager
+ENTRYPOINT ["uvicorn", "cart_manager.main:app", "--host", "0.0.0.0", "--port", "8050"]

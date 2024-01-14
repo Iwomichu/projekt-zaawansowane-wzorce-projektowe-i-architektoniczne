@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: zwpa
     environment:
       ZWPA_DATABASE_HOST: "postgres"
       ZWPA_DATABASE_PORT: "5432"
@@ -21,3 +22,12 @@ services:
       POSTGRES_PASSWORD: "q1!w2@e3#"
     ports:
       - 5432:5432
+  cart_manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cart_manager
+    environment:
+      ACCESS_TOKEN: "access"
+    ports:
+      - 8050:8050
