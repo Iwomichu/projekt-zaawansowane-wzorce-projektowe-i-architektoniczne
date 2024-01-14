@@ -9,6 +9,7 @@ from zwpa.model import (
     SupplyOffer,
     SupplyRequest,
     SupplyStatus,
+    SupplyTransportRequest,
     TimeWindow,
     Transport,
     TransportOffer,
@@ -601,6 +602,22 @@ class Fixtures:
         )
         session.add(supply_request)
         return supply_request
+
+    @classmethod
+    def new_supply_transport_request(
+        cls,
+        session: Session,
+        supply_id: int,
+        transport_request_id: int,
+        id: int | None = None,
+    ) -> SupplyTransportRequest:
+        supply_transport_request = SupplyTransportRequest(
+            id=id if id is not None else cls.next_id(),
+            supply_id=supply_id,
+            transport_request_id=transport_request_id,
+        )
+        session.add(supply_transport_request)
+        return supply_transport_request
 
     @classmethod
     def new_supply_request_form_data(

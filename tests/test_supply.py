@@ -11,6 +11,7 @@ from tests.fixtures import (
 )
 from tests.test_case_with_database import TestCaseWithDatabase
 from zwpa.model import (
+    Supply,
     SupplyOffer,
     SupplyReceipt,
     SupplyRequest,
@@ -19,6 +20,7 @@ from zwpa.model import (
     TransportRequest,
     TransportStatus,
     UserRole,
+    WarehouseProduct,
 )
 from zwpa.views.SupplyOfferView import SupplyOfferView
 from zwpa.workflows.supplies.AcceptRequestedSupplyOfferWorkflow import (
@@ -31,6 +33,7 @@ from zwpa.workflows.supplies.CreateNewSupplyOfferWorkflow import (
 from zwpa.workflows.supplies.CreateNewSupplyRequestWorkflow import (
     CreateNewSupplyRequestWorkflow,
 )
+from zwpa.workflows.supplies.HandleArrivingSupplyWorkflow import HandleArrivingSupplyWorkflow
 from zwpa.workflows.supplies.HandleSupplyOfferFormWorkflow import (
     HandleSupplyOfferFormWorkflow,
 )
@@ -275,6 +278,43 @@ class SupplyTestCase(TestCaseWithDatabase):
         # then
         self.assertCountEqual(expected, result)
 
+    def test_arrival_of_supply_handling(self):
+        # given
+        with self.session_maker() as session:
+            product = Fixtures.new_product(session)
+            warehouse = Fixtures.new_warehouse(session)
+            warehouse_product_id = Fixtures.new_warehouse_product(
+                session, warehouse_id=warehouse.id, product_id=product.id, current_count=0,
+            ).id
+            supply_id = Fixtures.new_supply(
+                session,
+                product_id=product.id,
+                warehouse_id=warehouse.id,
+                status=SupplyStatus.OFFER_ACCEPTED,
+            ).id
+            Fixtures.new_supply_request(session, supply_id=supply_id)
+            transport_id = Fixtures.new_transport(
+                session, status=TransportStatus.IN_TRANSIT
+            ).id
+            transport_request = Fixtures.new_transport_request(
+                session, transport_id=transport_id
+            )
+            Fixtures.new_supply_transport_request(
+                session, supply_id=supply_id, transport_request_id=transport_request.id
+            )
+            session.commit()
+        workflow = HandleArrivingSupplyWorkflow(self.session_maker)
+
+        # when
+        workflow.handle_arrival_if_transport_was_supply(transport_id)
+
+        # then
+        with self.session_maker() as session:
+            warehouse_product = session.get_one(WarehouseProduct, warehouse_product_id)
+            self.assertEqual(UNIT_COUNT, warehouse_product.current_count)
+            supply = session.get_one(Supply, supply_id)
+            self.assertEqual(SupplyStatus.COMPLETE, supply.status)
+
 
 class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
     def _clerk_tries_to_accept_supply_offer(self):
@@ -349,7 +389,10 @@ class AcceptSupplyOfferTestCase(TestCaseWithDatabase):
                 .where(SupplyOffer.id == self.supply_offer_id)
                 .one()
             )
-            self.assertEqual(supply_transport_request.transport_request.transport.status, TransportStatus.REQUESTED)
+            self.assertEqual(
+                supply_transport_request.transport_request.transport.status,
+                TransportStatus.REQUESTED,
+            )
             self.assertEqual(
                 self.price, supply_transport_request.transport_request.transport.price
             )
