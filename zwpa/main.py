@@ -41,7 +41,9 @@ rest_cart_manager = RestCartManager(
     manager_url=config.cart_manager_config.url,
     manager_access_key=config.cart_manager_config.access_key,
 )
-initialize_cart_manager_workflow = InitializeCartManagerWorkflow(session_maker)
+initialize_cart_manager_workflow = InitializeCartManagerWorkflow(
+    session_maker, cart_manager=rest_cart_manager
+)
 
 
 @asynccontextmanager
@@ -49,9 +51,7 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
     create_root_workflow.create_root_user()
     seed_system_with_data_workflow.seed()
-    initialize_cart_manager_workflow.initialize_cart_manager(
-        cart_manager=rest_cart_manager
-    )
+    initialize_cart_manager_workflow.initialize_cart_manager()
     yield
 
 
