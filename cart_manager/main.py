@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
+from logging import INFO, getLogger
 import os
 from typing import Callable, NewType
 from fastapi import FastAPI
@@ -9,10 +10,10 @@ from pydantic import BaseModel, Field
 
 ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
 SESSION_REFRESH_INTERVAL_IN_SECONDS = int(
-    os.environ.get("SESSION_REFRESH_INTERVAL_IN_SECONDS", "60")
+    os.environ.get("SESSION_REFRESH_INTERVAL_IN_SECONDS", "30")
 )
 SESSION_EXPIRATION_TIME_IN_SECONDS = int(
-    os.environ.get("SESSION_EXPIRATION_TIME_IN_SECONDS", "300")
+    os.environ.get("SESSION_EXPIRATION_TIME_IN_SECONDS", "900")
 )
 
 
@@ -31,8 +32,8 @@ class Cart(BaseModel):
 
 class ProductState(BaseModel):
     product_id: ProductId
-    puttable: int = 0
-    already_putted: int = 0
+    total_count: int = 0
+    already_put: int = 0
 
 
 class State(BaseModel):
@@ -64,9 +65,15 @@ locks = Locks()
 
 
 async def discard_old_session_data():
+    logger = getLogger("old-session-discarder")
+    logger.setLevel(INFO)
     while True:
+        logger.info(
+            f"Sleeping for the next {SESSION_REFRESH_INTERVAL_IN_SECONDS} seconds..."
+        )
         await asyncio.sleep(SESSION_REFRESH_INTERVAL_IN_SECONDS)
         async with locks.state_lock:
+            logger.info(f"Awake!")
             now = datetime.now(tz=timezone.utc)
             oldest_allowed_timestamp = now - timedelta(
                 seconds=SESSION_EXPIRATION_TIME_IN_SECONDS
@@ -77,12 +84,21 @@ async def discard_old_session_data():
                 if cart.last_update < oldest_allowed_timestamp
             ]
             for user_id in user_ids_to_discard_session:
+                logger.info(f"Removing session data for {user_id=}")
+                for product_id, cart_entry in state.cart_by_user_id[
+                    user_id
+                ].entries_by_product_id.items():
+                    async with locks.product_locks[product_id]:
+                        state.state_by_product[
+                            product_id
+                        ].already_put -= cart_entry.unit_count
                 del state.cart_by_user_id[user_id]
                 del locks.cart_locks[user_id]
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    asyncio.create_task(discard_old_session_data())
     yield
 
 
@@ -90,20 +106,20 @@ app = FastAPI(lifespan=lifespan)
 
 
 def increment_count(cart_entry: CartEntry, product_state: ProductState):
-    if product_state.already_putted + 1 > product_state.puttable:
+    if product_state.already_put + 1 > product_state.total_count:
         raise NotEnoughProductCountAvailableException(product_state.product_id)
     else:
         cart_entry.unit_count += 1
-        product_state.already_putted += 1
+        product_state.already_put += 1
 
 
 def decrement_count(cart_entry: CartEntry, product_state: ProductState):
     cart_entry.unit_count -= 1
-    product_state.already_putted -= 1
+    product_state.already_put -= 1
 
 
 def reset_count(cart_entry: CartEntry, product_state: ProductState):
-    product_state.already_putted -= cart_entry.unit_count
+    product_state.already_put -= cart_entry.unit_count
     cart_entry.unit_count = 0
 
 
@@ -127,7 +143,7 @@ async def modify_user_cart_entry(
         try:
             handler(cart.entries_by_product_id[product_id], product_state)
         except NotEnoughProductCountAvailableException:
-            product_state.already_putted -= cart.entries_by_product_id[
+            product_state.already_put -= cart.entries_by_product_id[
                 product_id
             ].unit_count
             cart.entries_by_product_id[product_id].unit_count = 0
@@ -136,14 +152,14 @@ async def modify_user_cart_entry(
 
 @app.put("/state", status_code=201)
 async def overwrite_state(
-    cart_by_user_id: dict[UserId, Cart], state_by_product: dict[ProductId, ProductState]
+    new_state: State
 ):
     async with locks.state_lock:
-        state.cart_by_user_id = cart_by_user_id
-        state_by_product = state_by_product
-        locks.cart_locks = {user_id: asyncio.Lock() for user_id in cart_by_user_id}
+        state.cart_by_user_id = new_state.cart_by_user_id
+        state.state_by_product = new_state.state_by_product
+        locks.cart_locks = {user_id: asyncio.Lock() for user_id in new_state.cart_by_user_id}
         locks.product_locks = {
-            product_id: asyncio.Lock() for product_id in state_by_product
+            product_id: asyncio.Lock() for product_id in state.state_by_product
         }
 
 
@@ -174,22 +190,22 @@ async def reset_amount_in_cart(user_id: UserId, product_id: ProductId):
     await modify_user_cart_entry(user_id, product_id, reset_count)
 
 
-@app.post("/cart/{user_id}/finalize", status_code=200)
-async def finalize_cart(user_id: UserId):
+@app.post("/cart/{user_id}/checkout", status_code=200)
+async def checkout_cart(user_id: UserId):
     async with locks.cart_locks[user_id]:
         for product_id, entry in state.cart_by_user_id[
             user_id
         ].entries_by_product_id.items():
             async with locks.product_locks[product_id]:
                 product_state = state.state_by_product[product_id]
-                difference = product_state.puttable - entry.unit_count
+                difference = product_state.total_count - entry.unit_count
                 if difference <= 0:
                     reset_count(entry, product_state)
                     raise NotEnoughProductCountAvailableException(
                         product_state.product_id
                     )
-                product_state.already_putted -= entry.unit_count
-                product_state.puttable -= entry.unit_count
+                product_state.already_put -= entry.unit_count
+                product_state.total_count -= entry.unit_count
         del state.cart_by_user_id[user_id]
     del locks.cart_locks[user_id]
 
@@ -197,7 +213,7 @@ async def finalize_cart(user_id: UserId):
 @app.post("/product/{product_id}/reduce")
 async def reduce_amount_available(product_id: ProductId, amount: int):
     async with locks.product_locks[product_id]:
-        state.state_by_product[product_id].puttable -= amount
+        state.state_by_product[product_id].total_count -= amount
 
 
 @app.post("/product/{product_id}/increase")
@@ -207,4 +223,4 @@ async def increase_amount_available(product_id: ProductId, amount: int):
             state.state_by_product[product_id] = ProductState(product_id=product_id)
             locks.product_locks[product_id] = asyncio.Lock()
     async with locks.product_locks[product_id]:
-        state.state_by_product[product_id].puttable += amount
+        state.state_by_product[product_id].total_count += amount

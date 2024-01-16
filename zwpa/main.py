@@ -3,6 +3,10 @@ from datetime import datetime, timezone
 from typing_extensions import Annotated
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
+from zwpa.workflows.retail.InitializeCartManagerWorkflow import (
+    InitializeCartManagerWorkflow,
+)
+from zwpa.workflows.retail.RestCartManager import RestCartManager
 
 from zwpa.workflows.user.CreateRootWorkflow import CreateRootWorkflow
 from zwpa.workflows.utils.SeedSystemWithData import SeedSystemWithDataWorkflow
@@ -33,6 +37,11 @@ create_root_workflow = CreateRootWorkflow(
     modify_user_roles_workflow=modify_user_roles_workflow,
 )
 seed_system_with_data_workflow = SeedSystemWithDataWorkflow(session_maker)
+rest_cart_manager = RestCartManager(
+    manager_url=config.cart_manager_config.url,
+    manager_access_key=config.cart_manager_config.access_key,
+)
+initialize_cart_manager_workflow = InitializeCartManagerWorkflow(session_maker)
 
 
 @asynccontextmanager
@@ -40,6 +49,9 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
     create_root_workflow.create_root_user()
     seed_system_with_data_workflow.seed()
+    initialize_cart_manager_workflow.initialize_cart_manager(
+        cart_manager=rest_cart_manager
+    )
     yield
 
 
