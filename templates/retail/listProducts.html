@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Retail{% endblock %}
+{% block content %}
+
+<h1>Products</h1>
+<div class="row">
+    <div class="col-8">
+        <table class="table table-striped">
+            <tr>
+                <th>Id</th>
+                <th>Label</th>
+                <th>Unit</th>
+                <th>Price</th>
+                <th>Available</th>
+                <th>Already in cart</th>
+                <th></th>
+                <th></th>
+            </tr>
+            {% for product in products %}
+            <tr>
+                <td>{{product.id}}</td>
+                <td>{{product.label}}</td>
+                <td>{{product.unit}}</td>
+                <td>{{"$%.2f"|format(product.price)}}</td>
+                <td>{{product.available}}</td>
+                <td>{{product.already_in_cart}}</td>
+                {%if (product.available > 0) %}
+                <td>
+                    <a class="btn btn-success" role="button" href="/retail/cart/{{product.id}}/add">Add to
+                        cart</a>
+                </td>
+                {% else %}
+                <td><a class="btn btn-success disabled" role="button" href="/retail/cart/{{product.id}}/add"
+                        aria-disabled="true" tabindex="-1">Add to cart</a>
+                </td>
+                {% endif %}
+                {%if (product.already_in_cart > 0) %}
+                <td><a class="btn btn-danger" role="button" href="/retail/cart/{{product.id}}/remove">Remove
+                        from cart</a></td>
+                {% else %}
+                <td><a class="btn btn-danger disabled" role="button" href="/retail/cart/{{product.id}}/remove"
+                        aria-disabled="true" tabindex="-1">Remove from cart</a></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </table>
+        <a class="btn btn-primary" role="button" href="/retail/cart">Go to your cart</a>
+    </div>
+</div>
+
+{% endblock %}

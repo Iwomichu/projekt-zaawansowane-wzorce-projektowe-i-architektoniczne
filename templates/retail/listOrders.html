@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+
+<h1>List of your orders</h1>
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>First name</th>
+        <th>Last name</th>
+        <th>Price</th>
+        <th>Destination longitude</th>
+        <th>Destination latitude</th>
+        <th>Status</th>
+        <th></th>
+    </tr>
+    {% for order in orders %}
+    <tr>
+        <td>{{order.id}}</td>
+        <td>{{order.first_name}}</td>
+        <td>{{order.last_name}}</td>
+        <td>{{order.price}}</td>
+        <td>{{order.destination_location_longitude}}</td>
+        <td>{{order.destination_location_latitude}}</td>
+        <td>{{order.status}}</td>
+        <td><a href="/retail/order/{{order.id}}">Details</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

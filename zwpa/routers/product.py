@@ -63,18 +63,6 @@ def get_warehouse_details(
         {
             "request": request,
             "product": asdict(product_view)
-            # "product": {
-            #     "id": 1,
-            #     "label": "Smartphone",
-            #     "unit": "ISO_CONTAINER",
-            #     "retail_price": 8.99,
-            #     "mean_sell_bulk_price": 7.39,
-            #     "mean_buy_bulk_price": 5.31,
-            #     "amount_in_our_warehouses": 123,
-            #     "amount_incoming_to_our_warehouses": 21,
-            #     "amount_requested_by_us": 22,
-            #     "amount_requested_by_clients": 40,
-            # },
         },
     )
 

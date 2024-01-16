@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Order {{order.id}}{% endblock %}
+{% block content %}
+
+<h1>Order id. {{order.id}}</h1>
+<h5>Id</h5>
+{{order.id}}
+<h5>Total price</h5>
+{{"$%.2f"|format(order.price)}}
+<h5>Products</h5>
+
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>Label</th>
+        <th>Count</th>
+    </tr>
+    {% for product in order.products %}
+    <tr>
+        <td>{{product.id}}</td>
+        <td>{{product.label}}</td>
+        <td>{{product.count}}</td>
+    </tr>
+    {% endfor %}
+</table>
+<h5>Destination longitude</h5>
+{{order.destination_location_longitude}}
+<h5>Destination latitude</h5>
+{{order.destination_location_latitude}}
+<h5>Transports</h5>
+<table class="table table-striped">
+    <tr>
+        <th>Id</th>
+        <th>Product</th>
+        <th>Count</th>
+        <th>Status</th>
+    </tr>
+    {% for transport in order.transports %}
+    <tr>
+        <td>{{transport.transport_id}}</td>
+        <td>{{transport.product_label}}</td>
+        <td>{{transport.product_count}}</td>
+        <td>{{transport.transport_status}}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
