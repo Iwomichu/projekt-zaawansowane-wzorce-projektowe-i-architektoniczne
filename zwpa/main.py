@@ -17,6 +17,7 @@ from .routers.shared import (
     engine,
     templates,
     get_current_user_id,
+    rest_cart_manager,
 )
 from .routers.user import (
     router as user_router,
@@ -37,10 +38,6 @@ create_root_workflow = CreateRootWorkflow(
     modify_user_roles_workflow=modify_user_roles_workflow,
 )
 seed_system_with_data_workflow = SeedSystemWithDataWorkflow(session_maker)
-rest_cart_manager = RestCartManager(
-    manager_url=config.cart_manager_config.url,
-    manager_access_key=config.cart_manager_config.access_key,
-)
 initialize_cart_manager_workflow = InitializeCartManagerWorkflow(
     session_maker, cart_manager=rest_cart_manager
 )
