@@ -6,12 +6,12 @@
     <h3>Total: {{"$%.2f"|format(total_cart_value)}}</h3>
     <form class="col-4" action="/retail/checkout" method="post">
         <div class="form-floating mb-3">
-            <input class="form-control" type="text" name="firstName" id="firstName" placeholder="">
-            <label for="firstName">First name</label>
+            <input class="form-control" type="text" name="first_name" id="first_name" placeholder="">
+            <label for="first_name">First name</label>
         </div>
         <div class="form-floating mb-3">
-            <input class="form-control" type="text" name="lastName" id="lastName" placeholder="">
-            <label for="firstName">Last name</label>
+            <input class="form-control" type="text" name="last_name" id="last_name" placeholder="">
+            <label for="last_name">Last name</label>
         </div>
         <div class="form-floating mb-3">
             <input class="form-control" type="number" name="destination_longitude" id="destination_longitude"

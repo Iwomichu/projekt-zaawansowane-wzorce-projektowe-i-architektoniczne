@@ -12,6 +12,7 @@ from zwpa.workflows.product.ListProductsWorkflow import ListProductsWorkflow
 from zwpa.workflows.retail.GetPersonalizedRetailProductViewsWorkflow import (
     GetPersonalizedRetailProductViewsWorkflow,
 )
+from zwpa.workflows.retail.HandleCheckoutWorkflow import HandleCheckoutWorkflow
 from zwpa.workflows.retail.ModifyCartWorkflow import ModifyCartWorkflow
 from zwpa.workflows.retail.OrderView import OrderStatus, OrderView
 from zwpa.workflows.retail.RetailProductView import (
@@ -21,7 +22,13 @@ from zwpa.workflows.retail.RetailStatusProductView import RetailStatusProductVie
 from zwpa.workflows.retail.RetailTransportView import RetailTransportView
 
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
-from .shared import get_current_user_id, session_maker, templates, rest_cart_manager
+from .shared import (
+    get_current_user_id,
+    session_maker,
+    templates,
+    rest_cart_manager,
+    simple_retail_price_calculator,
+)
 
 
 router = APIRouter(
@@ -35,6 +42,11 @@ get_personalized_retail_product_views_workflow = (
     GetPersonalizedRetailProductViewsWorkflow(session_maker, rest_cart_manager)
 )
 modify_car_workflow = ModifyCartWorkflow(session_maker, rest_cart_manager)
+handle_checkout_workflow = HandleCheckoutWorkflow(
+    session_maker,
+    cart_manager=rest_cart_manager,
+    retail_transport_price_calculator=simple_retail_price_calculator,
+)
 
 
 class RetailSection(str, Enum):
@@ -109,21 +121,14 @@ def get_checkout_form(
     request: Request,
     user_id: Annotated[int, Depends(get_current_user_id)],
 ):
-    cart = [
-        PersonalizedRetailProductView(
-            1,
-            "Smartwatch",
-            "ISO_CONTAINER",
-            Decimal(3.11),
-            available=5,
-            already_in_cart=2,
-        ),
-    ]
+    products = get_personalized_retail_product_views_workflow.get_personalized_retail_product_views(
+        user_id, only_already_in_cart=True
+    )
     return templates.TemplateResponse(
         "retail/checkoutForm.html",
         {
             "request": request,
-            "total_cart_value": sum(product.total for product in cart),
+            "total_cart_value": sum(product.total for product in products),
         },
     )
 
@@ -131,7 +136,18 @@ def get_checkout_form(
 @router.post("/checkout")
 def post_checkout(
     user_id: Annotated[int, Depends(get_current_user_id)],
+    first_name: Annotated[str, Form()],
+    last_name: Annotated[str, Form()],
+    destination_longitude: Annotated[float, Form()],
+    destination_latitude: Annotated[float, Form()],
 ):
+    handle_checkout_workflow.handle_checkout(
+        user_id=user_id,
+        first_name=first_name,
+        last_name=last_name,
+        destination_longitude=destination_longitude,
+        destination_latitude=destination_latitude,
+    )
     return RedirectResponse(url=f"/retail/orders", status_code=303)
 
 

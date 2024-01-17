@@ -419,3 +419,66 @@ class SupplyOffer(Base):
     load_time_window: Mapped["TimeWindow"] = relationship(
         foreign_keys=[load_time_window_id]
     )
+
+
+class OrderPosition(Base):
+    __tablename__ = "order_positions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
+    amount: Mapped[int] = mapped_column(Integer)
+
+    product: Mapped["Product"] = relationship(foreign_keys=[product_id])
+    order: Mapped["Order"] = relationship(
+        foreign_keys=[order_id], back_populates="positions"
+    )
+
+
+class OrderPersonalInformation(Base):
+    __tablename__ = "order_personal_information"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    first_name: Mapped[str] = mapped_column(String)
+    last_name: Mapped[str] = mapped_column(String)
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
+
+    order: Mapped["Order"] = relationship(back_populates="order_personal_information")
+
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    destination_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
+    total_price: Mapped[decimal.Decimal] = mapped_column(NumericMoney)
+    # order_personal_information_id: Mapped[int] = mapped_column(
+    #     ForeignKey("order_personal_information.id")
+    # )
+
+    destination: Mapped["Location"] = relationship(foreign_keys=[destination_id])
+    positions: Mapped[list["OrderPosition"]] = relationship(back_populates="order")
+    transport_requests: Mapped[list["OrderTransportRequest"]] = relationship(
+        back_populates="order"
+    )
+    order_personal_information: Mapped["OrderPersonalInformation"] = relationship(
+        back_populates="order"
+    )
+
+
+class OrderTransportRequest(Base):
+    __tablename__ = "order_transport_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), index=True)
+    transport_request_id: Mapped[int] = mapped_column(
+        ForeignKey("transport_requests.id"), index=True
+    )
+
+    order: Mapped["Order"] = relationship(
+        foreign_keys=[order_id], back_populates="transport_requests"
+    )
+    transport_request: Mapped["TransportRequest"] = relationship(
+        foreign_keys=[transport_request_id]
+    )

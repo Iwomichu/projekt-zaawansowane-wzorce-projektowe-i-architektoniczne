@@ -6,6 +6,7 @@ from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
 from zwpa.config import Config
 from zwpa.workflows.retail.RestCartManager import RestCartManager
+from zwpa.workflows.retail.SimpleRetailTransportPriceCalculator import SimpleRetailTransportPriceCalculator
 from zwpa.workflows.user.AuthenticateUserWorkflow import AuthenticateUserWorkflow
 
 
@@ -23,6 +24,7 @@ engine = create_engine(
 session_maker = sessionmaker(engine)
 security = HTTPBasic()
 templates = Jinja2Templates(directory="templates")
+simple_retail_price_calculator = SimpleRetailTransportPriceCalculator()
 rest_cart_manager = RestCartManager(
     manager_url=config.cart_manager_config.url,
     manager_access_key=config.cart_manager_config.access_key,
