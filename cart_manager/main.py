@@ -201,7 +201,7 @@ async def checkout_cart(user_id: UserId):
             async with locks.product_locks[product_id]:
                 product_state = state.state_by_product[product_id]
                 difference = product_state.total_count - entry.unit_count
-                if difference <= 0:
+                if difference < 0:
                     reset_count(entry, product_state)
                     raise NotEnoughProductCountAvailableException(
                         product_state.product_id

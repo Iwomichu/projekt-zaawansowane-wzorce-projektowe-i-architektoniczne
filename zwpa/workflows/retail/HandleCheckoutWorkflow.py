@@ -71,6 +71,7 @@ class HandleCheckoutWorkflow:
                     amount_from_warehouse_by_warehouse_product_id,
                 )
             self.cart_manager.checkout(user_id)
+            session.commit()
 
     def reduce_product_amount_in_warehouses(
         self, session: Session, product_id: int, amount: int
@@ -84,7 +85,7 @@ class HandleCheckoutWorkflow:
             .all()
         )
         for warehouse_product in warehouse_products:
-            if warehouse_product.current_count <= current_amount:
+            if warehouse_product.current_count >= current_amount:
                 warehouse_product.current_count -= current_amount
                 warehouse_product_id_to_count[warehouse_product.id] = current_amount
                 break
