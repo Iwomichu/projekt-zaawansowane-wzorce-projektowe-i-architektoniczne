@@ -14,6 +14,12 @@ class RestCart(BaseModel):
     last_update: datetime
 
 
+class RestProductState(BaseModel):
+    product_id: int
+    total_count: int = 0
+    already_put: int = 0
+
+
 class RestCartManager(CartManager):
     def __init__(self, manager_url: str, manager_access_key: str) -> None:
         super().__init__()
@@ -63,3 +69,13 @@ class RestCartManager(CartManager):
         requests.post(
             f"{self.manager_url}/product/{product_id}/increase?amount={amount}"
         )
+
+    def get_current_product_counts(self) -> dict[int, int]:
+        response = requests.get(f"{self.manager_url}/products")
+        if not response.ok:
+            raise RuntimeError()
+
+        return {
+            int(product_id): RestProductState(**state).total_count
+            for product_id, state in response.json().items()
+        }

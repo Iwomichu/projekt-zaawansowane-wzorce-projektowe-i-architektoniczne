@@ -9,6 +9,10 @@ from zwpa.workflows.product.HandleProductDetailsWorkflow import (
     HandleProductDetailsWorkflow,
 )
 from zwpa.workflows.product.ListProductsWorkflow import ListProductsWorkflow
+from zwpa.workflows.retail.GetPersonalizedRetailProductViewsWorkflow import (
+    GetPersonalizedRetailProductViewsWorkflow,
+)
+from zwpa.workflows.retail.ModifyCartWorkflow import ModifyCartWorkflow
 from zwpa.workflows.retail.OrderView import OrderStatus, OrderView
 from zwpa.workflows.retail.RetailProductView import (
     PersonalizedRetailProductView,
@@ -17,7 +21,7 @@ from zwpa.workflows.retail.RetailStatusProductView import RetailStatusProductVie
 from zwpa.workflows.retail.RetailTransportView import RetailTransportView
 
 from zwpa.workflows.utils.UserRoleChecker import UserRoleChecker
-from .shared import get_current_user_id, session_maker, templates
+from .shared import get_current_user_id, session_maker, templates, rest_cart_manager
 
 
 router = APIRouter(
@@ -27,6 +31,10 @@ router = APIRouter(
 user_role_checker = UserRoleChecker(session_maker)
 list_products_workflow = ListProductsWorkflow(session_maker)
 handle_product_details_workflow = HandleProductDetailsWorkflow(session_maker)
+get_personalized_retail_product_views_workflow = (
+    GetPersonalizedRetailProductViewsWorkflow(session_maker, rest_cart_manager)
+)
+modify_car_workflow = ModifyCartWorkflow(session_maker, rest_cart_manager)
 
 
 class RetailSection(str, Enum):
@@ -38,22 +46,11 @@ class RetailSection(str, Enum):
 def get_product_list(
     request: Request,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    query: str | None = None,
+    query: str = "",
 ):
-    print(f"Searching for products with {query=}...")
-    products = [
-        PersonalizedRetailProductView(
-            1,
-            "Smartwatch",
-            "ISO_CONTAINER",
-            Decimal(3.11),
-            available=5,
-            already_in_cart=2,
-        ),
-        PersonalizedRetailProductView(
-            2, "Phone", "ISO_CONTAINER", Decimal(11.33), available=0, already_in_cart=0
-        ),
-    ]
+    products = get_personalized_retail_product_views_workflow.get_personalized_retail_product_views(
+        user_id, query=query
+    )
     return templates.TemplateResponse(
         "retail/listProducts.html",
         {
@@ -69,6 +66,7 @@ def get_add_item_into_cart(
     product_id: int,
     previous_section: RetailSection = RetailSection.LIST,
 ):
+    modify_car_workflow.put_into_cart(user_id, product_id)
     target_section = "/retail"
     if previous_section is RetailSection.CART:
         target_section += "/cart"
@@ -81,6 +79,7 @@ def get_remove_item_from_cart(
     product_id: int,
     previous_section: RetailSection = RetailSection.LIST,
 ):
+    modify_car_workflow.take_from_cart(user_id, product_id)
     target_section = "/retail"
     if previous_section is RetailSection.CART:
         target_section += "/cart"
@@ -92,22 +91,15 @@ def get_cart(
     request: Request,
     user_id: Annotated[int, Depends(get_current_user_id)],
 ):
-    cart = [
-        PersonalizedRetailProductView(
-            1,
-            "Smartwatch",
-            "ISO_CONTAINER",
-            Decimal(3.11),
-            available=5,
-            already_in_cart=2,
-        ),
-    ]
+    products = get_personalized_retail_product_views_workflow.get_personalized_retail_product_views(
+        user_id, only_already_in_cart=True
+    )
     return templates.TemplateResponse(
         "retail/cartView.html",
         {
             "request": request,
-            "products": [asdict(product) for product in cart],
-            "total_cart_value": sum(product.total for product in cart),
+            "products": [asdict(product) for product in products],
+            "total_cart_value": sum(product.total for product in products),
         },
     )
 

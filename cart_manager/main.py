@@ -151,13 +151,13 @@ async def modify_user_cart_entry(
 
 
 @app.put("/state", status_code=201)
-async def overwrite_state(
-    new_state: State
-):
+async def overwrite_state(new_state: State):
     async with locks.state_lock:
         state.cart_by_user_id = new_state.cart_by_user_id
         state.state_by_product = new_state.state_by_product
-        locks.cart_locks = {user_id: asyncio.Lock() for user_id in new_state.cart_by_user_id}
+        locks.cart_locks = {
+            user_id: asyncio.Lock() for user_id in new_state.cart_by_user_id
+        }
         locks.product_locks = {
             product_id: asyncio.Lock() for product_id in state.state_by_product
         }
@@ -167,7 +167,9 @@ async def overwrite_state(
 async def get_current_product_counts(product_ids: list[ProductId] | None = None):
     if product_ids is None:
         product_ids = list(state.state_by_product.keys())
-    return [state.state_by_product[product_id] for product_id in product_ids]
+    return {
+        product_id: state.state_by_product[product_id] for product_id in product_ids
+    }
 
 
 @app.get("/cart/{user_id}")

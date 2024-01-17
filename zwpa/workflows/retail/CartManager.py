@@ -45,3 +45,7 @@ class CartManager(ABC):
     @abstractmethod
     def increase_available_count(self, product_id: int, amount: int) -> None:
         pass
+
+    @abstractmethod
+    def get_current_product_counts(self) -> dict[int, int]:
+        pass
