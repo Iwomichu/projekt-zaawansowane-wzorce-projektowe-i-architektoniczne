@@ -1,16 +1,10 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+from zwpa.model import OrderStatus
 
 from zwpa.workflows.retail.RetailStatusProductView import RetailStatusProductView
 from zwpa.workflows.retail.RetailTransportView import RetailTransportView
-
-
-class OrderStatus(str, Enum):
-    IN_PROGRESS = "IN_PROGRESS"
-    FINISHED = "FINISHED"
-
-    # TODO: Move that to model
 
 
 @dataclass

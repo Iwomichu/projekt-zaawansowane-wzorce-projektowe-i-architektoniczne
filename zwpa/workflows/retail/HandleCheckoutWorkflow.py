@@ -5,6 +5,7 @@ from zwpa.model import (
     Order,
     OrderPersonalInformation,
     OrderPosition,
+    OrderStatus,
     OrderTransportRequest,
     Product,
     TimeWindow,
@@ -159,6 +160,7 @@ class HandleCheckoutWorkflow:
                 product.retail_price for product in products_by_id.values()
             ),
             destination=destination,
+            status=OrderStatus.IN_PROGRESS,
         )
         order_personal_info = OrderPersonalInformation(
             first_name=first_name,

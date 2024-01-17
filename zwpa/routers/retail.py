@@ -9,6 +9,7 @@ from zwpa.workflows.product.HandleProductDetailsWorkflow import (
     HandleProductDetailsWorkflow,
 )
 from zwpa.workflows.product.ListProductsWorkflow import ListProductsWorkflow
+from zwpa.workflows.retail.GetOrderViewsWorkflow import GetOrderViewsWorkflow
 from zwpa.workflows.retail.GetPersonalizedRetailProductViewsWorkflow import (
     GetPersonalizedRetailProductViewsWorkflow,
 )
@@ -47,6 +48,7 @@ handle_checkout_workflow = HandleCheckoutWorkflow(
     cart_manager=rest_cart_manager,
     retail_transport_price_calculator=simple_retail_price_calculator,
 )
+get_order_views_workflow = GetOrderViewsWorkflow(session_maker)
 
 
 class RetailSection(str, Enum):
@@ -156,26 +158,7 @@ def get_orders(
     request: Request,
     user_id: Annotated[int, Depends(get_current_user_id)],
 ):
-    orders = [
-        OrderView(
-            id=1,
-            price=Decimal(111.0),
-            destination_location_latitude=55.0,
-            destination_location_longitude=11.0,
-            first_name="John",
-            last_name="Doe",
-            products=[RetailStatusProductView(id=1, label="Smartwatch", count=1)],
-            transports=[
-                RetailTransportView(
-                    transport_id=5,
-                    product_label="Smartwatch",
-                    product_count=1,
-                    transport_status=TransportStatus.COMPLETE,
-                )
-            ],
-            status=OrderStatus.FINISHED,
-        )
-    ]
+    orders = get_order_views_workflow.get_order_views(user_id)
     return templates.TemplateResponse(
         "retail/listOrders.html",
         {
@@ -191,24 +174,7 @@ def get_order_view(
     user_id: Annotated[int, Depends(get_current_user_id)],
     order_id: int,
 ):
-    order = OrderView(
-        id=1,
-        price=Decimal(111.0),
-        destination_location_latitude=55.0,
-        destination_location_longitude=11.0,
-        first_name="John",
-        last_name="Doe",
-        products=[RetailStatusProductView(id=1, label="Smartwatch", count=1)],
-        transports=[
-            RetailTransportView(
-                transport_id=5,
-                product_label="Smartwatch",
-                product_count=1,
-                transport_status=TransportStatus.COMPLETE,
-            )
-        ],
-        status=OrderStatus.FINISHED,
-    )
+    order = get_order_views_workflow.get_order_view(order_id)
     return templates.TemplateResponse(
         "retail/orderView.html",
         {

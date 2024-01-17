@@ -446,6 +446,20 @@ class OrderPersonalInformation(Base):
     order: Mapped["Order"] = relationship(back_populates="order_personal_information")
 
 
+class OrderStatus(str, Enum):
+    IN_PROGRESS = "IN_PROGRESS"
+    FINISHED = "FINISHED"
+
+
+OrderStatusType: pgEnum = pgEnum(
+    OrderStatus,
+    name="order_status",
+    create_constraint=True,
+    metadata=Base.metadata,
+    validate_strings=True,
+)
+
+
 class Order(Base):
     __tablename__ = "orders"
 
@@ -453,9 +467,7 @@ class Order(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     destination_id: Mapped[int] = mapped_column(ForeignKey("locations.id"))
     total_price: Mapped[decimal.Decimal] = mapped_column(NumericMoney)
-    # order_personal_information_id: Mapped[int] = mapped_column(
-    #     ForeignKey("order_personal_information.id")
-    # )
+    status: Mapped[OrderStatus] = mapped_column(OrderStatusType)
 
     destination: Mapped["Location"] = relationship(foreign_keys=[destination_id])
     positions: Mapped[list["OrderPosition"]] = relationship(back_populates="order")
