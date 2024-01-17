@@ -1,5 +1,8 @@
 from sqlalchemy.orm import sessionmaker, Session
 from zwpa.model import Transport, TransportStatus
+from zwpa.workflows.retail.HandleArrivingRetailPackageWorkflow import (
+    HandleArrivingRetailPackageWorkflow,
+)
 from zwpa.workflows.supplies.HandleArrivingSupplyWorkflow import (
     HandleArrivingSupplyWorkflow,
 )
@@ -13,6 +16,9 @@ class ChangeTransportStatusWorkflow:
         self.handle_arriving_supply_workflow = HandleArrivingSupplyWorkflow(
             session_maker
         )
+        self.handle_arriving_retail_package_workflow = (
+            HandleArrivingRetailPackageWorkflow(session_maker)
+        )
 
     def change_transport_status(
         self, user_id: int, transport_id: int, new_status: TransportStatus
@@ -24,6 +30,9 @@ class ChangeTransportStatusWorkflow:
             session.get_one(Transport, transport_id).status = new_status
             if new_status is TransportStatus.COMPLETE:
                 self.handle_arriving_supply_workflow.handle_arrival_if_transport_was_supply(
+                    transport_id
+                )
+                self.handle_arriving_retail_package_workflow.handle_arrival_if_transport_was_retail(
                     transport_id
                 )
             session.commit()

@@ -82,7 +82,7 @@ class HandleCheckoutWorkflow:
         warehouse_products = (
             session.query(WarehouseProduct)
             .where(WarehouseProduct.product_id == product_id)
-            .order_by(WarehouseProduct.current_count)
+            .order_by(WarehouseProduct.current_count.desc())
             .all()
         )
         for warehouse_product in warehouse_products:
