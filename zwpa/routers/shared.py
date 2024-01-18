@@ -5,8 +5,13 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
 from zwpa.config import Config
+from zwpa.exceptions.UserDoesNotExist import UserDoesNotExist
+from zwpa.exceptions.UserHasDifferentPassword import UserHasDifferentPassword
+from zwpa.exceptions.UserHasNoLoginAttemptsLeft import UserHasNoLoginAttemptsLeft
 from zwpa.workflows.retail.RestCartManager import RestCartManager
-from zwpa.workflows.retail.SimpleRetailTransportPriceCalculator import SimpleRetailTransportPriceCalculator
+from zwpa.workflows.retail.SimpleRetailTransportPriceCalculator import (
+    SimpleRetailTransportPriceCalculator,
+)
 from zwpa.workflows.user.AuthenticateUserWorkflow import AuthenticateUserWorkflow
 
 
@@ -36,9 +41,12 @@ authenticate_user_workflow = AuthenticateUserWorkflow(session_maker)
 def get_current_user_id(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
-    result = authenticate_user_workflow.authenticate_user(
-        credentials.username, credentials.password
-    )
+    try:
+        result = authenticate_user_workflow.authenticate_user(
+            credentials.username, credentials.password
+        )
+    except (UserDoesNotExist, UserHasNoLoginAttemptsLeft, UserHasDifferentPassword):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     if not result.authenticated:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     return result.user_id
