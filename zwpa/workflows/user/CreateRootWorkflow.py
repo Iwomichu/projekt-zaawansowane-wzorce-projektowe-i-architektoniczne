@@ -16,6 +16,7 @@ class CreateRootWorkflow:
 
     def create_root_user(self) -> None:
         try:
+            print(self.config.admin_password)
             root_id = self.create_user_workflow.create_user(self.config.admin_login, self.config.admin_password)
             self.modify_user_roles_workflow.modify_user_roles(root_id, roles=list(UserRole))
         except UserAlreadyExistsException as e:

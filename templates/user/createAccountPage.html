@@ -2,9 +2,17 @@
 {% block title %}Create account{% endblock %}
 {% block content %}
 <h1>Create account</h1>
-<form action="/user/create" method="post">
-    <input type="text" name="login" id="login">
-    <input type="password" name="password" id="password">
-    <input type="submit" value="Create">
-</form>
+<div class="row">
+    <form class="col-4" action="/user/create" method="post">
+        <div class="form-floating mb-3">
+            <input class="form-control" type="text" name="login" id="login" placeholder="">
+            <label for="login">Login</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input class="form-control" type="password" name="password" id="password" placeholder="">
+            <label for="password">Password</label>
+        </div>
+        <button class="btn btn-primary" type="submit" value="Create">Create</button>
+    </form>
+</div>
 {% endblock %}

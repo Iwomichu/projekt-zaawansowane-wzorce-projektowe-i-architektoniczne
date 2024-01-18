@@ -58,6 +58,18 @@ EXAMPLE_PRODUCTS = list({
     "Smart Lighting Kit",
     "Solar-Powered Calculator",
 })
+EXAMPLE_WAREHOUSE_ADDRESSES = [
+    "1234 Warehouse Ln, Cityville, ST 12345",
+    "5678 Storage St, Townsville, AB 67890",
+    "9101 Logistics Ave, Villagetown, CD 90123",
+    "2468 Distribution Dr, County City, EF 23456",
+    "1357 Stockpile Rd, Hamletville, GH 34567",
+    "9876 Inventory Blvd, Boroughburg, IJ 45678",
+    "5432 Supply Ct, Metropolis, KL 56789",
+    "1011 Shipment Rd, Megacity, MN 67890",
+    "3690 Dispatch St, Urbanville, OP 78901",
+    "7531 Cargo Ave, Suburbia, QR 89012"
+]
 
 
 class SeedSystemWithDataWorkflow:
@@ -117,14 +129,14 @@ class SeedSystemWithDataWorkflow:
     ) -> list[int]:
         warehouses = [
             Warehouse(
-                label=self.fake.word(),
+                label=warehouse_address,
                 location=self.create_location(),
                 load_time_windows=[
                     self.create_time_window(),
                     self.create_time_window(),
                 ],
             )
-            for _ in range(count)
+            for warehouse_address in EXAMPLE_WAREHOUSE_ADDRESSES
         ]
         warehouse_products = [
             WarehouseProduct(
