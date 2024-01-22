@@ -7,22 +7,22 @@ services:
     environment:
       ZWPA_DATABASE_HOST: "postgres"
       ZWPA_DATABASE_PORT: "5432"
-      ZWPA_DATABASE_DATABASE: "postgres"
-      ZWPA_DATABASE_LOGIN: "postgres"
-      ZWPA_DATABASE_PASSWORD: "q1!w2@e3#"
-      ZWPA_ADMIN_LOGIN: "admin"
-      ZWPA_ADMIN_PASSWORD: "admin"
+      ZWPA_DATABASE_DATABASE: "${ZWPA_DATABASE_DATABASE}"
+      ZWPA_DATABASE_LOGIN: "${ZWPA_DATABASE_LOGIN}"
+      ZWPA_DATABASE_PASSWORD: "${ZWPA_DATABASE_PASSWORD}"
+      ZWPA_ADMIN_LOGIN: "${ZWPA_ADMIN_LOGIN}"
+      ZWPA_ADMIN_PASSWORD: "${ZWPA_ADMIN_PASSWORD}"
       ZWPA_CART_MANAGER_HOST: "cart_manager"
-      ZWPA_CART_MANAGER_PORT: "8050"
-      ZWPA_CART_MANAGER_ACCESS_KEY: "access"
+      ZWPA_CART_MANAGER_PORT: "${ZWPA_CART_MANAGER_PORT}"
+      ZWPA_CART_MANAGER_ACCESS_KEY: "${ZWPA_CART_MANAGER_ACCESS_KEY}"
     ports:
-      - 8000:8000
+      - ${ZWPA_WEBSERVER_PORT}:8000
     depends_on:
       - postgres
   postgres:
     image: "postgres:11"
     environment:
-      POSTGRES_PASSWORD: "q1!w2@e3#"
+      POSTGRES_PASSWORD: "${ZWPA_DATABASE_PASSWORD}"
     ports:
       - 5432:5432
   cart_manager:
@@ -33,4 +33,4 @@ services:
     environment:
       ACCESS_TOKEN: "access"
     ports:
-      - 8050:8050
+      - ${ZWPA_CART_MANAGER_PORT}:8050
